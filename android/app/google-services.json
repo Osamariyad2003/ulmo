@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "372550702977",
+    "project_id": "ulmo-ce75c",
+    "storage_bucket": "ulmo-ce75c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372550702977:android:d7699c3f26fb4c8ca47a80",
+        "android_client_info": {
+          "package_name": "com.example.ulmo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "372550702977-k297td1j39s1komrpint7eggnuj5r1qj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG8rStGpBxf9XDUCoHaTBJFEQNj9VO9kI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "372550702977-k297td1j39s1komrpint7eggnuj5r1qj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "372550702977-q3tij6fdfedr3hn848t9ndlk2vbnnsdn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ulmo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
