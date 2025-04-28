@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ulmo/core/themes/colors_style.dart';
-import 'package:ulmo/features/categories/presentation/widgets/search_field.dart';
+import 'package:ulmo/features/categories/presentation/widgets/search_field.dart'
+    hide SearchField;
 import 'package:ulmo/features/product/domain/usecases/fetch_products.dart';
 import 'package:ulmo/features/product/presentation/controller/product_event.dart';
 import 'package:ulmo/features/product/presentation/widgets/fliter_screen.dart';
@@ -15,7 +17,6 @@ import '../widgets/product_card.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/search_field.dart';
@@ -24,24 +25,35 @@ class ProductScreen extends StatelessWidget {
   final String? parentCategory;
   final String? parentid;
 
-  const ProductScreen({
-    Key? key,
-    this.parentCategory,
-    this.parentid,
-  }) : super(key: key);
+  const ProductScreen({Key? key, this.parentCategory, this.parentid})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size for responsive calculations
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Determine grid columns based on screen width
+    final int crossAxisCount = screenWidth > 600 ? 3 : 2;
+
+    // Calculate child aspect ratio based on screen size
+    final double childAspectRatio = screenWidth > 600 ? 0.8 : 0.7;
+
     return Builder(
       builder: (innerContext) {
         // Schedule the product loading after build
         Future.microtask(() {
-          innerContext.read<ProductBloc>().add(LoadProductsEvent(parentid ?? ""));
+          innerContext.read<ProductBloc>().add(
+            LoadProductsEvent(parentid ?? ""),
+          );
         });
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(parentCategory ?? ""),
+            title: Text(
+              parentCategory ?? "",
+              style: TextStyle(fontSize: 18.sp),
+            ),
             centerTitle: true,
             backgroundColor: Colors.white,
             elevation: 1,
@@ -53,29 +65,33 @@ class ProductScreen extends StatelessWidget {
           body: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.r),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                   // SearchField(onChanged: (value) {}),
-                    const SizedBox(width: 8),
+                    Expanded(child: SearchField(onChanged: (value) {})),
+                    SizedBox(width: 8.w),
                     IconButton(
                       onPressed: () {},
                       icon: const Icon(Icons.sort),
                       color: AppColors.accentYellow,
-                      splashRadius: 24,
+                      splashRadius: 24.r,
+                      iconSize: 24.r,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8.w),
                     IconButton(
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const FilterScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const FilterScreen(),
+                          ),
                         );
                       },
                       icon: const Icon(Icons.filter_alt),
                       color: AppColors.accentYellow,
-                      splashRadius: 24,
+                      splashRadius: 24.r,
+                      iconSize: 24.r,
                     ),
                   ],
                 ),
@@ -86,38 +102,54 @@ class ProductScreen extends StatelessWidget {
                     if (state is ProductLoading) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (state is ProductLoaded) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(16.0),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.7,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: state.products.length,
-                        itemBuilder: (context, index) => ProductCard(
-                          product: state.products[index],
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => MultiBlocProvider(
-                                  providers: [
-                                    BlocProvider.value(value: context.read<ProductBloc>()),
-                                    BlocProvider.value(value: context.read<FavoriteBloc>()),
-                                    BlocProvider.value(value: context.read<BagBloc>()),
-                                  ],
-                                  child: ProductDetailsPage(product: state.products[index]),
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          return GridView.builder(
+                            padding: EdgeInsets.all(16.r),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount:
+                                      constraints.maxWidth > 600 ? 3 : 2,
+                                  childAspectRatio: childAspectRatio,
+                                  crossAxisSpacing: 12.r,
+                                  mainAxisSpacing: 12.r,
                                 ),
-                              ),
-                            );
-
-
-
-
-
-                          },
-                        ),
+                            itemCount: state.products.length,
+                            itemBuilder:
+                                (context, index) => ProductCard(
+                                  product: state.products[index],
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => MultiBlocProvider(
+                                              providers: [
+                                                BlocProvider.value(
+                                                  value:
+                                                      context
+                                                          .read<ProductBloc>(),
+                                                ),
+                                                BlocProvider.value(
+                                                  value:
+                                                      context
+                                                          .read<FavoriteBloc>(),
+                                                ),
+                                                BlocProvider.value(
+                                                  value:
+                                                      context.read<BagBloc>(),
+                                                ),
+                                              ],
+                                              child: ProductDetailsPage(
+                                                product: state.products[index],
+                                              ),
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                          );
+                        },
                       );
                     } else if (state is ProductError) {
                       return Center(child: Text(state.message));

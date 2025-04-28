@@ -46,6 +46,7 @@ dependencies:
 
     # ---------- State Management (BLoC) ----------
   flutter_bloc: ^9.1.0
+  stream_transform: ^2.1.0
 
     # ---------- Dependency Injection ----------
   get_it: ^8.0.3
@@ -79,10 +80,10 @@ dependencies:
   timeago: ^3.3.0
   image_picker: ^1.0.4
   flutter_stripe: ^11.4.0
-  google_maps_place_picker_mb: ^3.0.2
+  google_places_flutter: ^2.1.0
+  google_maps_flutter: ^2.12.1
 
 
-  # Or use the built-in Navigator 2.0 or other packages like auto_route
 
 
 dev_dependencies:

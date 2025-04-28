@@ -4,7 +4,7 @@ import '../data_source/bag_data_source.dart';
 import '../models/bag_item_model.dart';
 import '../models/bag_model.dart';
 
-class BagRepositoryImpl  {
+class BagRepositoryImpl {
   final BagDataSource bagDataSource;
 
   BagRepositoryImpl({required this.bagDataSource});

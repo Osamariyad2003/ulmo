@@ -6,7 +6,7 @@ class GetBagUseCase {
 
   GetBagUseCase(this.repository);
 
-  BagModel call() {
-    return repository.getBag();
+  Future<BagModel> call() async {
+    return await repository.getBag();
   }
 }

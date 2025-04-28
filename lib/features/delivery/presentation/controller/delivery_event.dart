@@ -16,8 +16,9 @@ class SetDeliveryMethod extends DeliveryEvent {
 }
 
 class SetDeliverySchedule extends DeliveryEvent {
-  final DateTime date;
-  final TimeOfDay time;
+  final DateTime? date;
+  final TimeOfDay? time;
+
   SetDeliverySchedule(this.date, this.time);
 }
 

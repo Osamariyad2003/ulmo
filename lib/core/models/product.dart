@@ -50,8 +50,8 @@ class Product {
       id: data['id'] ?? '',
       title: data['title'] ?? 'No Title',
       description: data['description'] ?? 'No Description',
-      price: (data['price'])?.toDouble() ?? 0.0,
-      stock: (data['stock'] )?.toInt() ?? 0,
+      price: parsedPrice, // Using the properly parsed price value
+      stock: (data['stock'] is num) ? (data['stock'] as num).toInt() : 0,
       imageUrls: data['imageUrls'] != null ? List<String>.from(data['imageUrls']) : [],
       categoryId: data['categoryId'] ?? '',
       variants: data['variants'] != null ? List<String>.from(data['variants']) : [],

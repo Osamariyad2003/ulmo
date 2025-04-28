@@ -25,7 +25,10 @@ class ParentCategoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => di<CategoryBloc>()..add(FetchChildCategories(parentId: parentDocId)),
+      create:
+          (_) =>
+              di<CategoryBloc>()
+                ..add(FetchChildCategories(parentId: parentDocId)),
       child: Scaffold(
         appBar: AppBar(
           title: Text(parentTitle),
@@ -53,24 +56,46 @@ class ParentCategoryScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Search',
+                        decoration:  InputDecoration(
+                          hintText: 'Search categories',
                           border: InputBorder.none,
                         ),
                         onChanged: (value) {
+                          // Dispatch search event with the query value and parent ID
+                          context.read<CategoryBloc>().add(
+                            SearchCategories(
+                              parentId: parentDocId,
+                              query: value,
+                            ),
+                          );
                         },
                       ),
+                    ),
+                    BlocBuilder<CategoryBloc, CategoryState>(
+                      builder: (context, state) {
+                        if (state is CategoryLoading) {
+                          return Container(
+                            width: 20,
+                            height: 20,
+                            padding: const EdgeInsets.all(4),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ],
                 ),
               ),
-               SizedBox(height: 16),
+              SizedBox(height: 16),
 
-               Text(
+              Text(
                 'categories',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-               SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Display categories using BlocBuilder + ConditionalBuilder
               Expanded(
@@ -82,29 +107,45 @@ class ParentCategoryScreen extends StatelessWidget {
                         final categories = (state as CategoryLoaded).categories;
                         return ListView.separated(
                           itemCount: categories.length,
-                          separatorBuilder: (context, index) =>
-                          const SizedBox(height: 12),
+                          separatorBuilder:
+                              (context, index) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final category = categories[index];
                             return CategoryItem(
-                              onTap: (){
-                                Navigator.push(context, MaterialPageRoute(
-                                  builder: (_) => BlocProvider<ProductBloc>(
-                                    create: (_) => di<ProductBloc>()..add(LoadProductsEvent(category.id)),
-                                    child: ProductScreen(parentid: category.id, parentCategory: category.name),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => BlocProvider<ProductBloc>(
+                                          create:
+                                              (_) =>
+                                                  di<ProductBloc>()..add(
+                                                    LoadProductsEvent(
+                                                      category.id,
+                                                    ),
+                                                  ),
+                                          child: ProductScreen(
+                                            parentid: category.id,
+                                            parentCategory: category.name,
+                                          ),
+                                        ),
                                   ),
-                                ));
-
+                                );
                               },
-                                category: category);
+                              category: category,
+                            );
                           },
                         );
                       },
                       fallback: (context) {
                         if (state is CategoryError) {
                           return Center(child: Text('Error: ${state.message}'));
-                        } else if (state is CategoryLoading || state is CategoryInitial) {
-                          return const Center(child: CircularProgressIndicator());
+                        } else if (state is CategoryLoading ||
+                            state is CategoryInitial) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         return const Center(child: Text('No categories found'));
                       },
@@ -119,4 +160,3 @@ class ParentCategoryScreen extends StatelessWidget {
     );
   }
 }
-

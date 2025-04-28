@@ -12,14 +12,17 @@ import '../../../../core/utils/assets_data.dart';
 import '../controller/register_bloc/register_event.dart';
 
 class RegisterScreen extends StatelessWidget {
-  final registerFormKey = GlobalKey<FormState>(); // Unique key for RegisterScreen
+  final registerFormKey =
+      GlobalKey<FormState>(); // Unique key for RegisterScreen
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmController = TextEditingController();
   final phoneController = TextEditingController();
   final countryCotroller = TextEditingController();
 
   var isPasssword = true;
+  var isConfirmPassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,10 @@ class RegisterScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(height: screenHeight * 0.1),
-                      Image.asset(Assets.iconsUlmoIcon, height: screenHeight * 0.09),
+                      Image.asset(
+                        Assets.iconsUlmoIcon,
+                        height: screenHeight * 0.09,
+                      ),
                       SizedBox(height: screenHeight * 0.05),
                       CustomTextField(
                         controller: nameController,
@@ -99,25 +105,21 @@ class RegisterScreen extends StatelessWidget {
                       ),
                       SizedBox(height: screenHeight * 0.02),
 
-
-
                       // Create Password Field
-                      BlocBuilder<RegisterBloc,RegisterState>(
+                      BlocBuilder<RegisterBloc, RegisterState>(
                         builder: (BuildContext context, RegisterState state) {
                           return CustomTextField(
                             controller: passwordController,
                             type: TextInputType.text,
                             isPassword: isPasssword,
                             suffixPath: Assets.iconsVisable_Eye_Icon,
-                            suffixPressed: (){
-                              isPasssword=!isPasssword;
+                            suffixPressed: () {
+                              isPasssword = !isPasssword;
 
-                              BlocProvider.of<RegisterBloc>(context).add(
-                                  TogglePasswordEvent(isPasssword)
-                              );
-
+                              BlocProvider.of<RegisterBloc>(
+                                context,
+                              ).add(TogglePasswordEvent(isPasssword));
                             },
-
                             hintText: 'Create Password',
                             validtor: (value) {
                               if (value == null || value.isEmpty) {
@@ -125,7 +127,42 @@ class RegisterScreen extends StatelessWidget {
                               }
                               return null;
                             },
-                            prefixPath: Assets.iconsVisable_Eye_Icon, // SVG path for prefix
+                            prefixPath:
+                                Assets
+                                    .iconsVisable_Eye_Icon, // SVG path for prefix
+                          );
+                        },
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+
+                      // Confirm Password Field
+                      BlocBuilder<RegisterBloc, RegisterState>(
+                        builder: (BuildContext context, RegisterState state) {
+                          return CustomTextField(
+                            controller: confirmController,
+                            type: TextInputType.text,
+                            isPassword: isConfirmPassword,
+                            suffixPath: Assets.iconsVisable_Eye_Icon,
+                            suffixPressed: () {
+                              isConfirmPassword = !isConfirmPassword;
+
+                              BlocProvider.of<RegisterBloc>(
+                                context,
+                              ).add(TogglePasswordEvent(isConfirmPassword));
+                            },
+                            hintText: 'Confirm Password',
+                            validtor: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password';
+                              }
+                              if (value != passwordController.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                            prefixPath:
+                                Assets
+                                    .iconsVisable_Eye_Icon, // SVG path for prefix
                           );
                         },
                       ),
@@ -144,16 +181,16 @@ class RegisterScreen extends StatelessWidget {
                               Checkbox(
                                 value: isAccepted,
                                 onChanged: (value) {
-                                  BlocProvider.of<RegisterBloc>(context).add(
-                                    ToggleTermsEvent(value ?? false),
-                                  );
+                                  BlocProvider.of<RegisterBloc>(
+                                    context,
+                                  ).add(ToggleTermsEvent(value ?? false));
                                 },
                                 activeColor: Colors.white,
                               ),
                               Expanded(
                                 child: Text(
                                   'By creating an account you agree to terms and conditions',
-                                  style: AppTextStyle.body2
+                                  style: AppTextStyle.body2,
                                 ),
                               ),
                             ],
@@ -179,29 +216,31 @@ class RegisterScreen extends StatelessWidget {
                                       password: passwordController.text,
                                       username: nameController.text,
                                       phone: phoneController.text,
-                                      country:countryCotroller.text,
+                                      country: countryCotroller.text,
                                     ),
                                   );
                                 }
-
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.accentYellow,
                                 foregroundColor: AppColors.black,
-                                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02), // Scaled padding
+                                padding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.02,
+                                ), // Scaled padding
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: Text(
                                 'Register',
-                                style: TextStyle(fontSize: screenWidth * 0.045), // Scaled text size
+                                style: TextStyle(
+                                  fontSize: screenWidth * 0.045,
+                                ), // Scaled text size
                               ),
                             ),
                           );
                         },
                       ),
-
 
                       SizedBox(height: screenHeight * 0.02),
 
@@ -213,18 +252,13 @@ class RegisterScreen extends StatelessWidget {
                               SnackBar(content: Text(state.message)),
                             );
                           } else if (state is RegisterSuccessState) {
-                            Navigator.pushReplacementNamed(context, Routes.layout);
-                          //     Navigator.pushReplacementNamed(
-                            //          context,
-                            //             Routes.verifyOtp,
-                            //               arguments: {
-                            //               'phoneNumber': phoneController.text,
-                            //          },
-                            //      );
+                            Navigator.pushReplacementNamed(
+                              context,
+                              Routes.layout,
+                            );
                           }
                         },
                         child: const SizedBox.shrink(),
-
                       ),
                     ],
                   ),
@@ -245,6 +279,10 @@ class RegisterScreen extends StatelessWidget {
       return false;
     }
     if (passwordController.text.isEmpty) {
+      return false;
+    }
+    if (confirmController.text.isEmpty ||
+        confirmController.text != passwordController.text) {
       return false;
     }
     return true;

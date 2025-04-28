@@ -18,8 +18,7 @@ class Routes {
   static const String layout = '/layout';
   static const String product = '/product';
   static const String filter = '/filter';
-
-
+  static const String delivery = '/delivery';
 
   // Product / Market
   static const String productDetails = '/productDetails';

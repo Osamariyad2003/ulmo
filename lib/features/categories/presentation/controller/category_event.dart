@@ -1,7 +1,5 @@
-
-abstract class CategoryEvent  {
+abstract class CategoryEvent {
   const CategoryEvent();
-
 }
 
 class FetchCategories extends CategoryEvent {}
@@ -11,3 +9,8 @@ class FetchChildCategories extends CategoryEvent {
   const FetchChildCategories({required this.parentId});
 }
 
+class SearchCategories extends CategoryEvent {
+  final String parentId;
+  final String query;
+  const SearchCategories({required this.parentId, required this.query});
+}

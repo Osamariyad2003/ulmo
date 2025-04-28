@@ -19,6 +19,9 @@ class ProductDataSource {
 
       final products = querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
+        
+        // Add the document ID as the product ID
+        data['id'] = doc.id;
 
         if (data.containsKey('price')) {
           if (data['price'] is String) {

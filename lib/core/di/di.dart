@@ -48,174 +48,167 @@ import '../models/product.dart';
 
 final GetIt di = GetIt.instance;
 
-
-void setupServiceLocator(){
- //data source
+void setupServiceLocator() {
+  //data source
   di.registerLazySingleton<FirebaseAuthDataSource>(
-      () =>   FirebaseAuthDataSource());
+    () => FirebaseAuthDataSource(),
+  );
 
-  di.registerLazySingleton<CategoryDataSource>(
-          () =>   CategoryDataSource());
+  di.registerLazySingleton<CategoryDataSource>(() => CategoryDataSource());
 
-  di.registerLazySingleton<ProductDataSource>(
-          () =>   ProductDataSource());
+  di.registerLazySingleton<ProductDataSource>(() => ProductDataSource());
 
-  di.registerLazySingleton<FilterDataSource>(
-          () =>   FilterDataSource());
-  di.registerLazySingleton<ReviewDataSource>(
-          () =>   ReviewDataSource());
-  di.registerLazySingleton<UserDataSource>(
-          () =>   UserDataSource());
+  di.registerLazySingleton<FilterDataSource>(() => FilterDataSource());
+  di.registerLazySingleton<ReviewDataSource>(() => ReviewDataSource());
+  di.registerLazySingleton<UserDataSource>(() => UserDataSource());
 
-  di.registerLazySingleton<BagDataSource>(
-          () =>   BagDataSource());
+  di.registerLazySingleton<BagDataSource>(() => BagDataSource());
 
-  di.registerLazySingleton<StripeServices>(
-          () =>   StripeServices());
+  di.registerLazySingleton<StripeServices>(() => StripeServices());
 
   di.registerLazySingleton<PaymentDataSource>(
-          () =>   PaymentDataSource(bagSource: di<BagDataSource>(), stripeServises:di<StripeServices>(), stripeCustomerId: '' ));
+    () => PaymentDataSource(
+      bagSource: di<BagDataSource>(),
+      stripeServises: di<StripeServices>(),
+      stripeCustomerId: '',
+    ),
+  );
 
-//repo
+  //repo
   di.registerLazySingleton<AuthRepositoryImpl>(
-        () => AuthRepositoryImpl(
+    () => AuthRepositoryImpl(
       firebaseAuth: FirebaseAuth.instance,
-      secureStorage:  FlutterSecureStorage(),
+      secureStorage: FlutterSecureStorage(),
       googleSignIn: GoogleSignIn(),
     ),
   );
 
   di.registerLazySingleton<CategoriesRepo>(
-        () => CategoriesRepo(
-        categoryDataSource: di<CategoryDataSource>(),
-    ),
+    () => CategoriesRepo(categoryDataSource: di<CategoryDataSource>()),
   );
 
   di.registerLazySingleton<ProductsRepo>(
-        () => ProductsRepo(
-          filterDataSource:di<FilterDataSource>() ,
+    () => ProductsRepo(
+      filterDataSource: di<FilterDataSource>(),
       productsDataSource: di<ProductDataSource>(),
     ),
   );
 
   di.registerLazySingleton<ReviewRepository>(
-        () => ReviewRepository(
-      di<ReviewDataSource>(),
-       di<UserDataSource>(),
-    ),
+    () => ReviewRepository(di<ReviewDataSource>(), di<UserDataSource>()),
   );
 
   di.registerLazySingleton<PaymentRepositoryImpl>(
-        () => PaymentRepositoryImpl(
-          paymentDataSource: di<PaymentDataSource>(),
-    ),
+    () => PaymentRepositoryImpl(paymentDataSource: di<PaymentDataSource>()),
   );
   di.registerLazySingleton<BagRepositoryImpl>(
-        () => BagRepositoryImpl(
-        bagDataSource: di<BagDataSource>(),
-    ),
+    () => BagRepositoryImpl(bagDataSource: di<BagDataSource>()),
   );
-
-
 
   //use cases
   di.registerLazySingleton<RegisterUserUseCase>(
-          ()=>RegisterUserUseCase(di.get<AuthRepositoryImpl>()));
+    () => RegisterUserUseCase(di.get<AuthRepositoryImpl>()),
+  );
 
   di.registerLazySingleton<LoginWithEmailUseCase>(
-          ()=>LoginWithEmailUseCase(di.get<AuthRepositoryImpl>()));
+    () => LoginWithEmailUseCase(di.get<AuthRepositoryImpl>()),
+  );
   di.registerLazySingleton<LoginWithGoogleUseCase>(
-          ()=>LoginWithGoogleUseCase(di.get<AuthRepositoryImpl>()));
+    () => LoginWithGoogleUseCase(di.get<AuthRepositoryImpl>()),
+  );
   di.registerLazySingleton<VerifyOtpUseCase>(
-          ()=>VerifyOtpUseCase(di.get<AuthRepositoryImpl>()));
+    () => VerifyOtpUseCase(di.get<AuthRepositoryImpl>()),
+  );
 
   di.registerLazySingleton<FetchCategoriesUseCase>(
-      ()=> FetchCategoriesUseCase(di.get<CategoriesRepo>())
+    () => FetchCategoriesUseCase(di.get<CategoriesRepo>()),
   );
 
   di.registerLazySingleton<FetchChildCategoriesUseCase>(
-          ()=> FetchChildCategoriesUseCase(di.get<CategoriesRepo>())
+    () => FetchChildCategoriesUseCase(di.get<CategoriesRepo>()),
   );
 
   di.registerLazySingleton<FetchProductsUseCase>(
-          ()=> FetchProductsUseCase(di.get<ProductsRepo>())
+    () => FetchProductsUseCase(di.get<ProductsRepo>()),
   );
   di.registerLazySingleton<FilterProductsUseCase>(
-          ()=> FilterProductsUseCase(di.get<ProductsRepo>())
+    () => FilterProductsUseCase(di.get<ProductsRepo>()),
   );
   di.registerLazySingleton<FetchCategoriesFilterUseCase>(
-          ()=> FetchCategoriesFilterUseCase(di.get<ProductsRepo>())
+    () => FetchCategoriesFilterUseCase(di.get<ProductsRepo>()),
   );
   di.registerLazySingleton<SubmitReview>(
-          ()=> SubmitReview(di.get<ReviewRepository>())
+    () => SubmitReview(di.get<ReviewRepository>()),
   );
   di.registerLazySingleton<GetProductReviews>(
-      ()=> GetProductReviews(di.get<ReviewRepository>())
+    () => GetProductReviews(di.get<ReviewRepository>()),
   );
 
   di.registerLazySingleton<AddItemToBagUseCase>(
-          ()=> AddItemToBagUseCase(di.get<BagRepositoryImpl>())
+    () => AddItemToBagUseCase(di.get<BagRepositoryImpl>()),
   );
   di.registerLazySingleton<ClearBagUseCase>(
-          ()=> ClearBagUseCase(di.get<BagRepositoryImpl>())
+    () => ClearBagUseCase(di.get<BagRepositoryImpl>()),
   );
 
   di.registerLazySingleton<GetBagUseCase>(
-          ()=> GetBagUseCase(di.get<BagRepositoryImpl>())
+    () => GetBagUseCase(di.get<BagRepositoryImpl>()),
   );
 
   di.registerLazySingleton<RemoveItemFromBagUseCase>(
-          ()=> RemoveItemFromBagUseCase(di.get<BagRepositoryImpl>())
+    () => RemoveItemFromBagUseCase(di.get<BagRepositoryImpl>()),
   );
 
   di.registerLazySingleton<UpdateBagItemQuantityUseCase>(
-          ()=> UpdateBagItemQuantityUseCase(di.get<BagRepositoryImpl>())
+    () => UpdateBagItemQuantityUseCase(di.get<BagRepositoryImpl>()),
   );
 
   di.registerLazySingleton<PayUseCase>(
-          ()=> PayUseCase(di.get<PaymentRepositoryImpl>())
+    () => PayUseCase(di.get<PaymentRepositoryImpl>()),
   );
-
-
-
-
-
 
   //  blocs
   di.registerLazySingleton<RegisterBloc>(
-          () => RegisterBloc(di.get<RegisterUserUseCase>(),)
+    () => RegisterBloc(di.get<RegisterUserUseCase>()),
   );
 
   di.registerLazySingleton<OtpAuthBloc>(
-          () => OtpAuthBloc(di.get<VerifyOtpUseCase>())
+    () => OtpAuthBloc(di.get<VerifyOtpUseCase>()),
   );
   di.registerLazySingleton<LoginBloc>(
-      () => LoginBloc(di.get<LoginWithEmailUseCase>(),di.get<LoginWithGoogleUseCase>())
+    () => LoginBloc(
+      di.get<LoginWithEmailUseCase>(),
+      di.get<LoginWithGoogleUseCase>(),
+    ),
   );
-  di.registerFactory<LayoutBloc>(
-          () => LayoutBloc()
-  );
+  di.registerFactory<LayoutBloc>(() => LayoutBloc());
   di.registerFactory<CategoryBloc>(
-          () => CategoryBloc(di.get<FetchCategoriesUseCase>(),di.get<FetchChildCategoriesUseCase>())
+    () => CategoryBloc(
+      di.get<FetchCategoriesUseCase>(),
+      di.get<FetchChildCategoriesUseCase>(),
+      di.get<CategoriesRepo>(),
+    ),
   );
   di.registerFactory<ProductBloc>(
-          () => ProductBloc(di.get<FetchProductsUseCase>(),di.get<FilterProductsUseCase>(),di.get<FetchCategoriesFilterUseCase>())
+    () => ProductBloc(
+      di.get<FetchProductsUseCase>(),
+      di.get<FilterProductsUseCase>(),
+      di.get<FetchCategoriesFilterUseCase>(),
+    ),
   );
 
   di.registerFactory<ReviewBloc>(
-          () => ReviewBloc( submitReview:di.get<SubmitReview>(),getProductReviews: di.get<GetProductReviews>() )
+    () => ReviewBloc(
+      submitReview: di.get<SubmitReview>(),
+      getProductReviews: di.get<GetProductReviews>(),
+    ),
   );
-  di.registerFactory<FavoriteBloc>(
-        () => FavoriteBloc([]),
-  );
+  di.registerFactory<FavoriteBloc>(() => FavoriteBloc([]));
 
   di.registerFactory<BagBloc>(
-          () => BagBloc(bagRepository: di.get<BagRepositoryImpl>(), paymentRepository:di.get<PaymentRepositoryImpl>() ,)
+    () => BagBloc(
+      bagRepository: di.get<BagRepositoryImpl>(),
+      paymentRepository: di.get<PaymentRepositoryImpl>(),
+    ),
   );
-
-
-
-
-
-
 }

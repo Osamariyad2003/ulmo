@@ -8,13 +8,15 @@ import 'delivery_state.dart';
 class DeliveryBloc extends Bloc<DeliveryEvent, DeliveryState> {
   DeliveryBloc() : super(DeliveryState()) {
     on<SetDeliveryAddress>((event, emit) {
-      emit(state.copyWith(
-        address: event.address,
-        lat: event.lat,
-        lng: event.lng,
-        saved: false,
-        error: null,
-      ));
+      emit(
+        state.copyWith(
+          address: event.address,
+          lat: event.lat,
+          lng: event.lng,
+          saved: false,
+          error: null,
+        ),
+      );
     });
 
     on<SetDeliveryMethod>((event, emit) {
@@ -22,7 +24,11 @@ class DeliveryBloc extends Bloc<DeliveryEvent, DeliveryState> {
     });
 
     on<SetDeliverySchedule>((event, emit) {
-      emit(state.copyWith(date: event.date, time: event.time));
+      // Only update the fields that are provided
+      final updatedDate = event.date ?? state.date;
+      final updatedTime = event.time ?? state.time;
+
+      emit(state.copyWith(date: updatedDate, time: updatedTime));
     });
 
     on<SaveDeliveryToFirebase>((event, emit) async {
