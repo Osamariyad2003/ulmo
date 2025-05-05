@@ -21,4 +21,12 @@ class CategoriesRepo {
       rethrow; // or throw a custom exception
     }
   }
+
+  Future<List<Category>> searchCategories(String parentId, String query) async {
+    try {
+      return await categoryDataSource.searchCategories(parentId, query);
+    } catch (error) {
+      rethrow;
+    }
+  }
 }

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
 class Product {
   final String id;
   final String title;
@@ -50,11 +49,13 @@ class Product {
       id: data['id'] ?? '',
       title: data['title'] ?? 'No Title',
       description: data['description'] ?? 'No Description',
-      price: (data['price'])?.toDouble() ?? 0.0,
-      stock: (data['stock'] )?.toInt() ?? 0,
-      imageUrls: data['imageUrls'] != null ? List<String>.from(data['imageUrls']) : [],
+      price: parsedPrice, // Using the properly parsed price value
+      stock: (data['stock'] is num) ? (data['stock'] as num).toInt() : 0,
+      imageUrls:
+          data['imageUrls'] != null ? List<String>.from(data['imageUrls']) : [],
       categoryId: data['categoryId'] ?? '',
-      variants: data['variants'] != null ? List<String>.from(data['variants']) : [],
+      variants:
+          data['variants'] != null ? List<String>.from(data['variants']) : [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       measurements: Measurements.fromMap(data['measurements'] ?? {}),
       composition: Composition.fromMap(data['composition'] ?? {}),
@@ -76,6 +77,36 @@ class Product {
       'measurements': measurements.toMap(),
       'composition': composition.toMap(),
     };
+  }
+
+  Product copyWith({
+    String? id,
+    String? title,
+    String? description,
+    double? price,
+    int? stock,
+    List<String>? imageUrls,
+    String? categoryId,
+    List<String>? variants,
+    DateTime? createdAt,
+    Measurements? measurements,
+    Composition? composition,
+    bool? isFav,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      stock: stock ?? this.stock,
+      imageUrls: imageUrls ?? this.imageUrls,
+      categoryId: categoryId ?? this.categoryId,
+      variants: variants ?? this.variants,
+      createdAt: createdAt ?? this.createdAt,
+      measurements: measurements ?? this.measurements,
+      composition: composition ?? this.composition,
+      isFav: isFav ?? this.isFav,
+    );
   }
 }
 
@@ -107,14 +138,8 @@ class Measurements {
     );
   }
 
-
   Map<String, dynamic> toMap() {
-    return {
-      'height': height,
-      'width': width,
-      'depth': depth,
-      'weight': weight,
-    };
+    return {'height': height, 'width': width, 'depth': depth, 'weight': weight};
   }
 }
 
@@ -122,10 +147,7 @@ class Composition {
   final String mainMaterial;
   final String secondaryMaterial;
 
-  Composition({
-    required this.mainMaterial,
-    required this.secondaryMaterial,
-  });
+  Composition({required this.mainMaterial, required this.secondaryMaterial});
 
   factory Composition.fromMap(Map<String, dynamic> data) {
     return Composition(

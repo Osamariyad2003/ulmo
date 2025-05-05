@@ -11,7 +11,7 @@ import '../../../bag/presentation/controller/bag_event.dart';
 import '../../../favorite/presentation/controller/favorite_bloc.dart';
 import '../../../favorite/presentation/controller/favorite_event.dart';
 import '../../../favorite/presentation/controller/favorite_state.dart';
-
+import '../../../bag/presentation/views/bag_screen.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Product product;
@@ -40,10 +40,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   width: double.infinity,
                   child: PageView.builder(
                     itemCount: widget.product.imageUrls.length,
-                    itemBuilder: (context, index) => Image.network(
-                      widget.product.imageUrls[index],
-                      fit: BoxFit.cover,
-                    ),
+                    itemBuilder:
+                        (context, index) => Image.network(
+                          widget.product.imageUrls[index],
+                          fit: BoxFit.cover,
+                        ),
                   ),
                 ),
                 Positioned(
@@ -52,7 +53,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   child: CircleAvatar(
                     backgroundColor: Colors.white,
                     child: IconButton(
-                      icon:  Icon(Icons.arrow_back,color: Colors.black,),
+                      icon: Icon(Icons.arrow_back, color: Colors.black),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -64,7 +65,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     backgroundColor: Colors.white,
                     child: BlocBuilder<FavoriteBloc, FavoriteState>(
                       builder: (context, state) {
-                        final isFav = context.read<FavoriteBloc>().isFavorite(widget.product.id);
+                        final isFav = context.read<FavoriteBloc>().isFavorite(
+                          widget.product.id,
+                        );
 
                         return IconButton(
                           icon: Icon(
@@ -82,10 +85,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                           },
                         );
                       },
-                    )
-
-
-
+                    ),
                   ),
                 ),
               ],
@@ -114,10 +114,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const SizedBox(height: 8),
                   Text(
                     widget.product.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
 
@@ -126,32 +123,40 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: widget.product.variants!.asMap().entries.map((entry) {
-                          int idx = entry.key;
-                          String variant = entry.value;
-                          return GestureDetector(
-                            onTap: () => setState(() => selectedVariant = idx),
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: selectedVariant == idx
-                                    ? Colors.black
-                                    : Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                variant,
-                                style: TextStyle(
-                                  color: selectedVariant == idx
-                                      ? Colors.white
-                                      : Colors.black,
+                        children:
+                            widget.product.variants!.asMap().entries.map((
+                              entry,
+                            ) {
+                              int idx = entry.key;
+                              String variant = entry.value;
+                              return GestureDetector(
+                                onTap:
+                                    () => setState(() => selectedVariant = idx),
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        selectedVariant == idx
+                                            ? Colors.black
+                                            : Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    variant,
+                                    style: TextStyle(
+                                      color:
+                                          selectedVariant == idx
+                                              ? Colors.white
+                                              : Colors.black,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
                       ),
                     ),
                   const SizedBox(height: 20),
@@ -163,9 +168,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ProductInformationScreen(
-                            product: widget.product,
-                          ),
+                          builder:
+                              (_) => ProductInformationScreen(
+                                product: widget.product,
+                              ),
                         ),
                       );
                     },
@@ -175,16 +181,24 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const Divider(),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title:  Text('Reviews'),
+                    title: Text('Reviews'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children:  [
+                      children: [
                         SizedBox(width: 6),
                         Icon(Icons.arrow_forward_ios, size: 16),
                       ],
                     ),
                     onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_)=> ReviewListScreen(productId: widget.product.id)));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ReviewListScreen(
+                                productId: widget.product.id,
+                              ),
+                        ),
+                      );
                     },
                   ),
 
@@ -193,24 +207,71 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     onPressed: () {
                       final product = widget.product;
 
+                      // Ensure we have a valid image URL
+                      final String imageUrl =
+                          product.imageUrls.isNotEmpty
+                              ? product.imageUrls.first
+                              : '';
+
                       final bagItem = BagItemModel(
-                        productId: product.id,
+                        productId: product.id.trim(),
                         name: product.title,
                         price: product.price,
-                        imageUrl: product.imageUrls.first,
+                        imageUrl: imageUrl,
                         quantity: 1,
                       );
 
-                      context.read<BagBloc>().add(AddItemEvent(bagItem));
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Added to bag!')),
+                      // Debug information to identify why validation is failing
+                      print('DEBUG - Adding product to bag:');
+                      print(
+                        'Product ID: "${product.id}", isEmpty: ${product.id.isEmpty}',
                       );
+                      print(
+                        'Name: "${product.title}", isEmpty: ${product.title.isEmpty}',
+                      );
+                      print(
+                        'Price: ${product.price}, is valid: ${product.price > 0}',
+                      );
+                      print('Image URL: "$imageUrl"');
+                      print('Is bag item valid: ${bagItem.isValid}');
+
+                      if (bagItem.isValid) {
+                        context.read<BagBloc>().add(AddItemEvent(bagItem));
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Added ${product.title} to bag!'),
+                            duration: const Duration(seconds: 2),
+                            action: SnackBarAction(
+                              label: 'VIEW BAG',
+                              onPressed: () {
+                                // Navigate to bag screen
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => BagScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      } else {
+                        // Show error message if item is invalid
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Unable to add item to bag'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
 
-
-                    icon:  Icon(Icons.shopping_bag_outlined,color: Colors.black,),
-                    label:  Text('Add to bag'),
+                    icon: Icon(
+                      Icons.shopping_bag_outlined,
+                      color: Colors.black,
+                    ),
+                    label: Text('Add to bag'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow[700],
                       foregroundColor: Colors.black,

@@ -25,9 +25,9 @@ class ProductTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin:  EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Padding(
-        padding:  EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -38,45 +38,69 @@ class ProductTile extends StatelessWidget {
                 width: 60,
                 height: 60,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    (loadingProgress.expectedTotalBytes ?? 1)
+                                : null,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('\$${price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      )),
-                  SizedBox(height: 4),
-                  Text(title,
-                      style:  TextStyle(
-                        fontSize: 14,
-                      )),
-                   SizedBox(height: 2),
                   Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    '\$${price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                   SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  Text(title, style: const TextStyle(fontSize: 14)),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       IconButton(
-                        icon:  Icon(Icons.remove),
+                        icon: const Icon(Icons.remove),
                         onPressed: onRemove,
                         splashRadius: 20,
                       ),
                       Text(
                         quantity.toString(),
-                        style:  TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16),
                       ),
                       IconButton(
-                        icon:  Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         onPressed: onAdd,
                         splashRadius: 20,
                       ),
@@ -86,7 +110,7 @@ class ProductTile extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon:  Icon(Icons.close),
+              icon: const Icon(Icons.close),
               onPressed: onRemoveTile,
               splashRadius: 20,
             ),
