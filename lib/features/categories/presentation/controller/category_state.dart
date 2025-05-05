@@ -1,24 +1,39 @@
-import '../../../../core/models/catagory.dart';
-
-abstract class CategoryState  {
-  const CategoryState();
-
-
-}
+abstract class CategoryState {}
 
 class CategoryInitial extends CategoryState {}
 
 class CategoryLoading extends CategoryState {}
 
 class CategoryLoaded extends CategoryState {
-  final List<Category> categories;
+  final List<dynamic> categories;
 
-  const CategoryLoaded({required this.categories});
+  CategoryLoaded({required this.categories});
+}
 
+class CategorySearching extends CategoryState {
+  final String query;
+
+  CategorySearching(this.query);
+}
+
+class CategorySearchResults extends CategoryState {
+  final List<dynamic> results;
+  final String query;
+
+  CategorySearchResults({required this.results, required this.query});
+
+  @override
+  List<Object?> get props => [results, query];
+}
+
+class CategorySearchEmpty extends CategoryState {
+  final String query;
+
+  CategorySearchEmpty(this.query);
 }
 
 class CategoryError extends CategoryState {
   final String message;
 
-  const CategoryError({required this.message});
+  CategoryError({required this.message});
 }

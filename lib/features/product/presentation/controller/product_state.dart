@@ -16,6 +16,7 @@ class ProductError extends ProductState {
 
   ProductError(this.message);
 }
+
 class ProductFilterLoading extends ProductState {}
 
 class ProductFilterLoaded extends ProductState {
@@ -36,17 +37,14 @@ class CategoryLoaded extends ProductState {
   final List<Category> categories;
   final Set<String> selectedCategories;
 
-
-  CategoryLoaded({required this.categories,required this.selectedCategories});
-
+  CategoryLoaded({required this.categories, required this.selectedCategories});
 }
 
 class CategoryError extends ProductState {
   final String message;
 
-   CategoryError({required this.message});
+  CategoryError({required this.message});
 }
-
 
 class FavoriteLoading extends ProductState {}
 
@@ -55,5 +53,3 @@ class FavoriteLoaded extends ProductState {
 
   FavoriteLoaded(this.favorites);
 }
-
-class FavoriteUpdated extends ProductState {}
