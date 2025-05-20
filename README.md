@@ -18,8 +18,6 @@ A complete Flutter implementation of the **Ulmo E-Commerce UI Kit**, powered by 
 
 ## 📱 Screenshots
 
-> All screens match the design system of the [Ulmo E-Commerce UI Kit on Figma](https://www.figma.com/design/xnW7cThJlxw8uV29Yaw9FU/Ulmo-E-Commerce-UI-kit--Community-?node-id=4-2&p=f&m=draw)
-
 ### 🏠 Home Screen – Product Grid
 Displays products in a two-column grid with image, name, and price.
 
