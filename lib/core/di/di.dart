@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:ulmo/core/helpers/stripe_services.dart';
 import 'package:ulmo/features/auth/data/repo/auth_repo.dart';
 import 'package:ulmo/features/auth/domain/usecases/login_google_usecase.dart';
@@ -18,6 +19,9 @@ import 'package:ulmo/features/categories/data/repo/category_repo_impl.dart';
 import 'package:ulmo/features/categories/domain/usecases/fetch_categories.dart';
 import 'package:ulmo/features/categories/domain/usecases/fetch_child_categories.dart';
 import 'package:ulmo/features/categories/presentation/controller/category_bloc.dart';
+import 'package:ulmo/features/delivery/data/data_source/save_address_firebase.dart';
+import 'package:ulmo/features/delivery/data/repo/delivery_repository.dart';
+import 'package:ulmo/features/delivery/presentation/controller/delivery_bloc.dart';
 import 'package:ulmo/features/favorite/presentation/controller/favorite_bloc.dart';
 import 'package:ulmo/features/layout/presentation/controller/layout_bloc.dart';
 import 'package:ulmo/features/product/data/data_source/filter_data_source.dart';
@@ -26,12 +30,22 @@ import 'package:ulmo/features/product/data/repo/product_repo.dart';
 import 'package:ulmo/features/product/domain/usecases/fetch_all_products.dart';
 import 'package:ulmo/features/product/domain/usecases/fetch_products.dart';
 import 'package:ulmo/features/product/presentation/controller/product_bloc.dart';
+import 'package:ulmo/features/profile/data/data_source/profile_data_source.dart';
+import 'package:ulmo/features/profile/data/repo/profile_repo.dart';
+import 'package:ulmo/features/profile/domain/usecases/change_password_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/get_user_orders_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/get_user_profile_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/sign_out_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/update_profile_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/upload_profile_photo_usecase.dart';
+import 'package:ulmo/features/profile/presentation/controller/profile_bloc.dart';
 import 'package:ulmo/features/review/data/data_source/review_data_source.dart';
 import 'package:ulmo/features/review/data/data_source/user_data_source.dart';
 import 'package:ulmo/features/review/data/repo/review_repo.dart';
 import 'package:ulmo/features/review/domain/usecases/get_prodect_review.dart';
 import 'package:ulmo/features/review/domain/usecases/submit_review_usecases.dart';
 import 'package:ulmo/features/review/presentation/controller/review_%20bloc.dart';
+import '../../features/profile/data/data_source/local_data_source/card_data_source.dart';
 
 import '../../features/auth/data/data_source/firebase_auth_data_source.dart';
 import '../../features/auth/domain/usecases/otp_usecase.dart';
@@ -48,7 +62,10 @@ import '../models/product.dart';
 
 final GetIt di = GetIt.instance;
 
-void setupServiceLocator() {
+Future<void> setupServiceLocator() async {
+  // Initialize Hive
+  await Hive.initFlutter();
+
   //data source
   di.registerLazySingleton<FirebaseAuthDataSource>(
     () => FirebaseAuthDataSource(),
@@ -73,6 +90,12 @@ void setupServiceLocator() {
       stripeCustomerId: '',
     ),
   );
+  di.registerLazySingleton<ProfileDataSource>(() => ProfileDataSource());
+  di.registerLazySingleton<SaveAddressFirebase>(() => SaveAddressFirebase());
+
+  // Register HiveCardStorage
+  final cardStorage = await HiveCardStorage.create();
+  di.registerSingleton<HiveCardStorage>(cardStorage);
 
   //repo
   di.registerLazySingleton<AuthRepositoryImpl>(
@@ -103,6 +126,13 @@ void setupServiceLocator() {
   );
   di.registerLazySingleton<BagRepositoryImpl>(
     () => BagRepositoryImpl(bagDataSource: di<BagDataSource>()),
+  );
+
+  di.registerLazySingleton<ProfileRepo>(
+    () => ProfileRepo(profileDataSource: di<ProfileDataSource>()),
+  );
+  di.registerLazySingleton<DeliveryRepository>(
+    () => DeliveryRepository(addressDataSource: di.get<SaveAddressFirebase>()),
   );
 
   //use cases
@@ -167,6 +197,25 @@ void setupServiceLocator() {
     () => PayUseCase(di.get<PaymentRepositoryImpl>()),
   );
 
+  di.registerLazySingleton<GetUserProfileUseCase>(
+    () => GetUserProfileUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<GetUserOrdersUseCase>(
+    () => GetUserOrdersUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<SignOutUseCase>(
+    () => SignOutUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<UploadProfilePhotoUseCase>(
+    () => UploadProfilePhotoUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<ChangePasswordUseCase>(
+    () => ChangePasswordUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(di.get<ProfileRepo>()),
+  );
+
   //  blocs
   di.registerLazySingleton<RegisterBloc>(
     () => RegisterBloc(di.get<RegisterUserUseCase>()),
@@ -203,12 +252,34 @@ void setupServiceLocator() {
       getProductReviews: di.get<GetProductReviews>(),
     ),
   );
-  di.registerFactory<FavoriteBloc>(() => FavoriteBloc([]));
+  di.registerFactory<FavoriteBloc>(
+    () => FavoriteBloc(productRepository: di.get<ProductsRepo>()),
+  );
+
+  di.registerFactory<DeliveryBloc>(
+    () => DeliveryBloc(D_repository: di.get<DeliveryRepository>()),
+  );
 
   di.registerFactory<BagBloc>(
     () => BagBloc(
-      bagRepository: di.get<BagRepositoryImpl>(),
-      paymentRepository: di.get<PaymentRepositoryImpl>(),
+      addItemUseCase: di<AddItemToBagUseCase>(),
+      removeItemUseCase: di<RemoveItemFromBagUseCase>(),
+      updateBagItemQuantityUseCase: di<UpdateBagItemQuantityUseCase>(),
+      getBagUseCase: di<GetBagUseCase>(),
+      clearBagUseCase: di<ClearBagUseCase>(),
+      processPaymentUseCase: di<PayUseCase>(),
+      deliveryBloc: di<DeliveryBloc>(),
+    ),
+  );
+
+  di.registerFactory<ProfileBloc>(
+    () => ProfileBloc(
+      getUserProfile: di<GetUserProfileUseCase>(),
+      updateProfile: di<UpdateProfileUseCase>(),
+      uploadProfilePhoto: di<UploadProfilePhotoUseCase>(),
+      changePassword: di<ChangePasswordUseCase>(),
+      getUserOrders: di<GetUserOrdersUseCase>(),
+      signOut: di<SignOutUseCase>(),
     ),
   );
 }

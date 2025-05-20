@@ -85,7 +85,7 @@ class AppRouter {
           builder:
               (_) => BlocProvider.value(
                 value: di<BagBloc>(),
-                child: AddressPickerButton(apiKey: APIKeys.googleMapKey),
+                child: AddressAutocompletePage(apiKey: APIKeys.googleMapKey, onAddressSelected: (String description, double lat, double lng) {  },),
               ),
         );
 

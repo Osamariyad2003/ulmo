@@ -1,3 +1,5 @@
+import 'package:ulmo/features/delivery/data/model/delivery_model.dart';
+
 import '../../data/repo/payment_repo.dart';
 
 class PayUseCase {
@@ -5,7 +7,7 @@ class PayUseCase {
 
   PayUseCase(this.repository);
 
-  Future<void> call() async {
-    await repository.pay();
+  Future<void> call(DeliveryInfo deliveryInfo) async {
+    await repository.pay(deliveryInfo: deliveryInfo);
   }
 }

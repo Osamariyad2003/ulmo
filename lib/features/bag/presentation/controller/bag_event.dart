@@ -5,9 +5,8 @@ abstract class BagEvent {}
 
 class AddItemEvent extends BagEvent {
   final BagItemModel item;
-   AddItemEvent(this.item);
+  AddItemEvent(this.item);
 }
-
 
 class LoadBagEvent extends BagEvent {}
 
@@ -39,3 +38,10 @@ class SelectPaymentMethodEvent extends BagEvent {
 }
 
 class ConfirmPaymentEvent extends BagEvent {}
+
+class UpdateQuantityEvent extends BagEvent {
+  final String productId;
+  final int quantity;
+
+  UpdateQuantityEvent({required this.productId, required this.quantity});
+}

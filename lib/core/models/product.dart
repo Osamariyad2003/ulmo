@@ -30,6 +30,36 @@ class Product {
     required this.composition,
     this.isFav = false,
   });
+  Product copyWith({
+    String? id,
+    String? title,
+    String? description,
+    double? price,
+    int? stock,
+    List<String>? imageUrls,
+    String? categoryId,
+    List<String>? variants,
+    DateTime? createdAt,
+    Measurements? measurements,
+    Composition? composition,
+    bool? isFav,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      stock: stock ?? this.stock,
+      imageUrls: imageUrls ?? this.imageUrls,
+      categoryId: categoryId ?? this.categoryId,
+      variants: variants ?? this.variants,
+      createdAt: createdAt ?? this.createdAt,
+      measurements: measurements ?? this.measurements,
+      composition: composition ?? this.composition,
+      isFav: isFav ?? this.isFav,
+    );
+  }
+
 
   factory Product.fromMap(Map<String, dynamic> data, {bool isFav = false}) {
     double parsedPrice = 0.0;

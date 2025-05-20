@@ -1,57 +1,97 @@
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:ulmo/features/profile/data/models/credit_card_adapter.dart';
+import 'package:uuid/uuid.dart';
+import '../../../data/models/credit_card.dart';
 
-import '../../models/credit_card.dart';
-
+/// Card storage implementation using Hive local database
 class HiveCardStorage {
-  static const String _boxName = 'payment_cards';
-  late Box<Map> _cardBox;
+  late Box<CreditCard> _cardsBox;
+  late Box<String> _settingsBox;
+  static const String _defaultCardKey = 'default_card_id';
 
-  HiveCardStorage(this._cardBox);
+  HiveCardStorage._();
 
+  /// Factory constructor to create and initialize storage
   static Future<HiveCardStorage> create() async {
-    final Box<Map> cardBox = await Hive.openBox<Map>(_boxName);
-    return HiveCardStorage(cardBox);
+    final instance = HiveCardStorage._();
+    await instance._init();
+    return instance;
   }
 
-  Future<bool> saveCard(CreditCard card) async {
-    try {
-      final String cardId = card.id ?? DateTime.now().millisecondsSinceEpoch.toString();
-
-      final cardToSave = CreditCard(
-        cardNumber: card.cardNumber,
-        expiryDate: card.expiryDate,
-        cvv: card.cvv,
-        cardHolderName: card.cardHolderName,
-        id: cardId,
-      );
-
-      // Store card in Hive using ID as key
-      await _cardBox.put(cardId, cardToSave.toJson());
-      return true;
-    } catch (e) {
-      print('Error saving card: $e');
-      return false;
+  /// Initialize the storage with Hive boxes
+  Future<void> _init() async {
+    if (!Hive.isAdapterRegistered(0)) {
+      // Use appropriate adapter ID
+      Hive.registerAdapter(CreditCardAdapter());
     }
+
+    await Hive.openBox<CreditCard>('payment_cards');
+    await Hive.openBox<String>('payment_settings');
+
+    _cardsBox = Hive.box<CreditCard>('payment_cards');
+    _settingsBox = Hive.box<String>('payment_settings');
   }
 
+  /// Get all saved payment cards
   List<CreditCard> getCards() {
     try {
-      return _cardBox.values
-          .map((map) => CreditCard.fromJson(Map<String, dynamic>.from(map)))
-          .toList();
+      return _cardsBox.values.toList();
     } catch (e) {
-      print('Error getting cards: $e');
+      print("Error getting cards from Hive: $e");
       return [];
     }
   }
 
-  Future<bool> deleteCard(String cardId) async {
+  /// Get the default card ID
+  String? getDefaultCardId() {
+    return _settingsBox.get(_defaultCardKey);
+  }
+
+  /// Save a card to storage
+  Future<void> saveCard(CreditCard card) async {
     try {
-      await _cardBox.delete(cardId);
-      return true;
+      // Generate ID if not present
+      final cardWithId =
+          card.id == null ? card.copiedWith(id: const Uuid().v4()) : card;
+
+      // Save card to local storage
+      await _cardsBox.put(cardWithId.id!, cardWithId);
+
+      // If this is the first card or marked as default, set as default
+      if (card.isDefault || _cardsBox.length == 1) {
+        await setDefaultCard(cardWithId.id!);
+      }
     } catch (e) {
-      print('Error deleting card: $e');
-      return false;
+      print("Error saving card to Hive: $e");
+      rethrow;
+    }
+  }
+
+  /// Delete a card from storage
+  Future<void> deleteCard(String cardId) async {
+    try {
+      await _cardsBox.delete(cardId);
+
+      final defaultCardId = getDefaultCardId();
+      if (cardId == defaultCardId && _cardsBox.isNotEmpty) {
+        final newDefaultCard = _cardsBox.keys.first.toString();
+        await setDefaultCard(newDefaultCard);
+      } else if (_cardsBox.isEmpty) {
+        await _settingsBox.delete(_defaultCardKey);
+      }
+    } catch (e) {
+      print("Error deleting card from Hive: $e");
+      rethrow;
+    }
+  }
+
+  /// Set a card as the default payment method
+  Future<void> setDefaultCard(String cardId) async {
+    try {
+      await _settingsBox.put(_defaultCardKey, cardId);
+    } catch (e) {
+      print("Error setting default card in Hive: $e");
+      rethrow;
     }
   }
 }

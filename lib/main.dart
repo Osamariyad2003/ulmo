@@ -10,6 +10,8 @@ import 'package:ulmo/core/app_router/routers.dart';
 import 'package:ulmo/core/helpers/api_keys.dart';
 import 'package:ulmo/core/helpers/bloc_observer.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_event.dart';
+import 'package:ulmo/features/profile/presentation/controller/profile_bloc.dart';
+import 'package:ulmo/features/profile/presentation/controller/profile_event.dart';
 
 import 'core/di/di.dart';
 import 'core/themes/app_theme.dart';
@@ -17,6 +19,7 @@ import 'features/bag/presentation/controller/bag_bloc.dart';
 import 'features/favorite/presentation/controller/favorite_bloc.dart';
 import 'features/layout/presentation/controller/layout_bloc.dart';
 import 'features/product/presentation/controller/product_bloc.dart';
+import 'features/profile/data/models/credit_card.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -28,7 +31,7 @@ void main() async {
   setupServiceLocator();
   await Hive.initFlutter();
   await Hive.openBox('appBox');
-  await Hive.openBox('payment_cards');
+  await Hive.openBox<CreditCard>('payment_cards');
   await Hive.openBox<List<String>>('favorite_ids');
   await Hive.openBox('bag_box');
 
@@ -56,6 +59,8 @@ class MyApp extends StatelessWidget {
               },
             ),
             BlocProvider(create: (_) => di<FavoriteBloc>()),
+            BlocProvider(create: (_) => di<ProfileBloc>()..add(LoadProfile())),
+
           ],
           child: MaterialApp(
             onGenerateRoute: AppRouter.onGenerateRoute,

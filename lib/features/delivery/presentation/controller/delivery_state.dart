@@ -1,27 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:ulmo/features/delivery/data/model/delivery_model.dart';
 
-class DeliveryState {
-  final String? address;
-  final double? lat;
-  final double? lng;
-  final String? method;
-  final DateTime? date;
-  final TimeOfDay? time;
+abstract class DeliveryState {
+  const DeliveryState();
+}
+
+// Add new state for saved addresses
+class SavedAddressesLoaded extends DeliveryState {
+  final List<DeliveryInfo> addresses;
+  const SavedAddressesLoaded(this.addresses);
+}
+
+class DeliveryInitial extends DeliveryState {
+  const DeliveryInitial();
+}
+
+class DeliveryLoading extends DeliveryState {
+  const DeliveryLoading();
+}
+
+class DeliveryError extends DeliveryState {
+  final String message;
+
+  const DeliveryError(this.message);
+}
+
+class DeliverySelected extends DeliveryState {
+  final String address;
+  final double lat;
+  final double lng;
+  final String method;
+  final DateTime date;
+  final TimeOfDay time;
   final bool saved;
-  final String? error;
 
-  DeliveryState({
-    this.address,
-    this.lat,
-    this.lng,
-    this.method,
-    this.date,
-    this.time,
+  const DeliverySelected({
+    required this.address,
+    required this.lat,
+    required this.lng,
+    required this.method,
+    required this.date,
+    required this.time,
     this.saved = false,
-    this.error,
   });
 
-  DeliveryState copyWith({
+  DeliverySelected copyWith({
     String? address,
     double? lat,
     double? lng,
@@ -29,9 +52,8 @@ class DeliveryState {
     DateTime? date,
     TimeOfDay? time,
     bool? saved,
-    String? error,
   }) {
-    return DeliveryState(
+    return DeliverySelected(
       address: address ?? this.address,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
@@ -39,7 +61,6 @@ class DeliveryState {
       date: date ?? this.date,
       time: time ?? this.time,
       saved: saved ?? this.saved,
-      error: error,
     );
   }
 }

@@ -7,254 +7,346 @@ import 'package:ulmo/core/utils/widgets/custom_button.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_bloc.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_event.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_state.dart';
+import '../../data/model/delivery_model.dart';
 
 import '../controller/delivery_bloc.dart';
 import '../controller/delivery_event.dart';
 import '../controller/delivery_state.dart';
 
-class AddressPickerButton extends StatelessWidget {
+class AddressAutocompletePage extends StatefulWidget {
   final String apiKey;
+  final Function(String description, double lat, double lng) onAddressSelected;
 
-  const AddressPickerButton({super.key, required this.apiKey});
+  AddressAutocompletePage({
+    required this.apiKey,
+    required this.onAddressSelected,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      child: const Text('Pick address'),
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (ctx) => _AddressAutocompletePage(apiKey: apiKey),
-          ),
-        );
-      },
-    );
-  }
+  State<AddressAutocompletePage> createState() =>
+      AddressAutocompletePageState();
 }
 
-class _AddressAutocompletePage extends StatelessWidget {
-  final String apiKey;
-
-  const _AddressAutocompletePage({required this.apiKey});
+class AddressAutocompletePageState extends State<AddressAutocompletePage> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
 
   @override
-  Widget build(BuildContext context) {
-    final controller = TextEditingController();
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Select delivery address')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GooglePlaceAutoCompleteTextField(
-          textEditingController: controller,
-          googleAPIKey: apiKey,
-          debounceTime: 600, // ms between keystrokes
-          isLatLngRequired: true, // fetch lat/lng in details call
-          countries: const ['JO'], // restrict to Jordan (optional)
-          getPlaceDetailWithLatLng: (Prediction p) {
-            context.read<DeliveryBloc>().add(
-              SetDeliveryAddress(
-                p.description ?? '',
-                double.tryParse(p.lat ?? '0') ?? 0,
-                double.tryParse(p.lng ?? '0') ?? 0,
-              ),
-            );
-            Navigator.pop(context);
-          },
-          itemClick: (Prediction p) {
-            // Update the text field UI when the user taps a row.
-            controller.text = p.description ?? '';
-            controller.selection = TextSelection.fromPosition(
-              TextPosition(offset: controller.text.length),
-            );
-          },
-          inputDecoration: const InputDecoration(
-            labelText: 'Search address',
-            border: OutlineInputBorder(),
-          ),
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    // Automatically focus the text field when the screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
   }
-}
 
-class DeliveryScreen extends StatelessWidget {
-  const DeliveryScreen({Key? key}) : super(key: key);
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Delivery Information'),
-        elevation: 0,
-        backgroundColor: Colors.white,
+        title: const Text('Select delivery address'),
+        actions: [
+          // Add a close button in case the user wants to cancel
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
-      body: BlocProvider(
-        create: (_) => DeliveryBloc(),
-        child: BlocBuilder<DeliveryBloc, DeliveryState>(
-          builder: (context, state) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            GooglePlaceAutoCompleteTextField(
+              textEditingController: _controller,
+              googleAPIKey: widget.apiKey,
+              focusNode: _focusNode, // Use the focus node to auto-focus
+              debounceTime: 600,
+              isLatLngRequired: true,
+              countries: const ['JO'],
+              getPlaceDetailWithLatLng: (Prediction p) {
+                widget.onAddressSelected(
+                  p.description ?? '',
+                  double.tryParse(p.lat ?? '0') ?? 0,
+                  double.tryParse(p.lng ?? '0') ?? 0,
+                );
+                Navigator.pop(context);
+              },
+              itemClick: (Prediction p) {
+                _controller.text = p.description ?? '';
+                _controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _controller.text.length),
+                );
+              },
+              inputDecoration: InputDecoration(
+                labelText: 'Search address',
+                hintText: 'Start typing to search...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => _controller.clear(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Enter your full address for delivery',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DeliveryScreen extends StatefulWidget {
+  const DeliveryScreen({Key? key}) : super(key: key);
+
+  @override
+  State<DeliveryScreen> createState() => _DeliveryScreenState();
+}
+
+class _DeliveryScreenState extends State<DeliveryScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create:
+          (context) =>
+              DeliveryBloc(D_repository: RepositoryProvider.of(context)),
+      child: BlocConsumer<DeliveryBloc, DeliveryState>(
+        listener: (context, state) {
+          if (state is DeliveryError) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
+          }
+        },
+        builder: (context, state) {
+          final deliveryInfo = context.read<DeliveryBloc>().currentDelivery;
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Delivery Information'),
+              elevation: 0,
+              backgroundColor: Colors.white,
+            ),
+            body:
+                state is DeliveryLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildDeliveryForm(context, deliveryInfo),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDeliveryForm(BuildContext context, DeliveryInfo? deliveryInfo) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAddressSection(context, deliveryInfo),
+          const SizedBox(height: 24),
+          _buildMethodSection(context, deliveryInfo),
+          const SizedBox(height: 24),
+          _buildScheduleSection(context, deliveryInfo),
+          const Spacer(),
+          _buildOrderSummary(context, deliveryInfo),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressSection(
+    BuildContext context,
+    DeliveryInfo? deliveryInfo,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Delivery Address',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        deliveryInfo?.address != null
+            ? AddressCard(
+              address: deliveryInfo!.address,
+              onTapChange: () => _showAddressPicker(context),
+            )
+            : ElevatedButton(
+              onPressed: () => _showAddressPicker(context),
+              child: const Text('Select Address'),
+            ),
+      ],
+    );
+  }
+
+  Widget _buildMethodSection(BuildContext context, DeliveryInfo? deliveryInfo) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Delivery Method',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        DeliveryMethodSelector(
+          selectedMethod: deliveryInfo?.method,
+          onMethodSelected: (method) {
+            context.read<DeliveryBloc>().add(SetDeliveryMethod(method));
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScheduleSection(
+    BuildContext context,
+    DeliveryInfo? deliveryInfo,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Delivery Schedule',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: _buildDatePicker(context, deliveryInfo?.date),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: _buildTimePicker(context, deliveryInfo?.time),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOrderSummary(BuildContext context, DeliveryInfo? deliveryInfo) {
+    return BlocBuilder<BagBloc, BagState>(
+      builder: (context, bagState) {
+        if (bagState is BagLoaded) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Delivery address section
                   const Text(
-                    'Delivery Address',
+                    'Total',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Address display or picker
-                  state.address != null
-                      ? AddressCard(
-                        address: state.address!,
-                        onTapChange: () => _showAddressPicker(context),
-                      )
-                      : AddressPickerButton(apiKey: 'YOUR_GOOGLE_MAPS_API_KEY'),
-
-                  const SizedBox(height: 24),
-
-                  // Delivery method section
-                  const Text(
-                    'Delivery Method',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Delivery method options
-                  DeliveryMethodSelector(
-                    selectedMethod: state.method,
-                    onMethodSelected: (method) {
-                      context.read<DeliveryBloc>().add(
-                        SetDeliveryMethod(method),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Delivery schedule section
-                  const Text(
-                    'Delivery Schedule',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Date and time pickers
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: GestureDetector(
-                          onTap: () => _selectDate(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              state.date != null
-                                  ? '${state.date!.day}/${state.date!.month}/${state.date!.year}'
-                                  : 'Select Date',
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: GestureDetector(
-                          onTap: () => _selectTime(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              state.time != null
-                                  ? _formatTimeOfDay(state.time!)
-                                  : 'Select Time',
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const Spacer(),
-
-                  // Order summary from bag
-                  BlocBuilder<BagBloc, BagState>(
-                    builder: (context, bagState) {
-                      if (bagState is BagLoaded) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Total',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '\$${bagState.bag.total.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            CustomButton(
-                              label: 'Continue to Payment',
-                              onPressed: () {
-                                if (_validateDeliveryInfo(context, state)) {
-                                  // Navigate to payment
-                                  context.read<BagBloc>().add(
-                                    SelectPaymentMethodEvent('card'),
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Proceeding to payment'),
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                          ],
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
+                  Text(
+                    '\$${bagState.bag.total.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
-            );
-          },
+              const SizedBox(height: 16),
+              CustomButton(
+                label: 'Continue to Payment',
+                onPressed:
+                    () => _handleContinueToPayment(context, deliveryInfo),
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  void _handleContinueToPayment(
+    BuildContext context,
+    DeliveryInfo? deliveryInfo,
+  ) {
+    if (deliveryInfo == null || !_validateDeliveryInfo(context, deliveryInfo)) {
+      return;
+    }
+
+    try {
+      context.read<BagBloc>().add(SelectPaymentMethodEvent('card'));
+      Navigator.pushNamed(context, '/payment');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error proceeding to payment: ${e.toString()}')),
+      );
+    }
+  }
+
+  void _showAddressPicker(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (ctx) => AddressAutocompletePage(
+              apiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
+              onAddressSelected: (description, lat, lng) {
+                context.read<DeliveryBloc>().add(
+                  SetDeliveryAddress(description, lat, lng),
+                );
+              },
+            ),
+      ),
+    );
+  }
+
+  Widget _buildDatePicker(BuildContext context, DateTime? date) {
+    return GestureDetector(
+      onTap: () => _selectDate(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          date != null
+              ? '${date.day}/${date.month}/${date.year}'
+              : 'Select Date',
         ),
       ),
     );
   }
 
-  void _showAddressPicker(BuildContext context) {
-    // Show address picker dialog
+  Widget _buildTimePicker(BuildContext context, TimeOfDay? time) {
+    return GestureDetector(
+      onTap: () => _selectTime(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(time != null ? _formatTimeOfDay(time) : 'Select Time'),
+      ),
+    );
   }
 
   void _selectDate(BuildContext context) async {
+    final deliveryState = context.read<DeliveryBloc>().state;
+
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
@@ -263,49 +355,52 @@ class DeliveryScreen extends StatelessWidget {
     );
 
     if (date != null && context.mounted) {
-      // Get the current time or use a default time
-      final currentTime =
-          context.read<DeliveryBloc>().state.time ?? TimeOfDay.now();
-      context.read<DeliveryBloc>().add(SetDeliverySchedule(date, currentTime));
+      context.read<DeliveryBloc>().add(
+        SetDeliverySchedule(
+          date,
+          deliveryState is DeliverySelected
+              ? deliveryState.time ?? TimeOfDay.now()
+              : TimeOfDay.now(),
+        ),
+      );
     }
   }
 
   void _selectTime(BuildContext context) async {
+    final deliveryState = context.read<DeliveryBloc>().state;
+    if (deliveryState is! DeliverySelected) return;
+
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: deliveryState.time ?? TimeOfDay.now(),
     );
 
     if (time != null && context.mounted) {
-      // Get the current date or use a default date
-      final currentDate =
-          context.read<DeliveryBloc>().state.date ?? DateTime.now();
-      context.read<DeliveryBloc>().add(SetDeliverySchedule(currentDate, time));
+      context.read<DeliveryBloc>().add(
+        SetDeliverySchedule(deliveryState.date ?? DateTime.now(), time),
+      );
     }
   }
 
-  bool _validateDeliveryInfo(BuildContext context, DeliveryState state) {
-    if (state.address == null) {
+  bool _validateDeliveryInfo(BuildContext context, DeliveryInfo deliveryInfo) {
+    if (deliveryInfo.address.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a delivery address')),
       );
       return false;
     }
-
-    if (state.method == null) {
+    if (deliveryInfo.method.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a delivery method')),
       );
       return false;
     }
-
-    if (state.date == null || state.time == null) {
+    if (deliveryInfo.date == null || deliveryInfo.time == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select delivery date and time')),
       );
       return false;
     }
-
     return true;
   }
 
@@ -394,7 +489,6 @@ class DeliveryMethodSelector extends StatelessWidget {
     String cost,
   ) {
     final isSelected = selectedMethod == methodId;
-
     return GestureDetector(
       onTap: () => onMethodSelected(methodId),
       child: Container(
