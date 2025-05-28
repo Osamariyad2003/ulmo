@@ -57,7 +57,11 @@ class PaymentMethodAdded extends ProfileState {
 
 class PaymentMethodDeleted extends ProfileState {}
 
-class DefaultPaymentMethodSet extends ProfileState {}
+class DefaultPaymentMethodSet extends ProfileState {
+  final String cardId;
+
+  DefaultPaymentMethodSet(this.cardId);
+}
 
 class ProfileError extends ProfileState {
   final String message;

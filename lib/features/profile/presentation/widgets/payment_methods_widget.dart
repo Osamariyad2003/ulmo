@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../../../core/di/di.dart';
 import '../../data/models/credit_card.dart';
 import '../controller/profile_bloc.dart';
@@ -22,199 +21,255 @@ class PaymentMethodsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => di<ProfileBloc>()..add(LoadPaymentMethods()),
-      child: BlocConsumer<ProfileBloc, ProfileState>(
-        listener: (context, state) {
-          if (state is ProfileError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          } else if (state is PaymentMethodDeleted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Payment method removed')),
-            );
-          } else if (state is DefaultPaymentMethodSet) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Default payment method updated')),
-            );
-          }
-        },
-        builder: (context, state) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showTitle) ...[
-                const Text(
-                  'Payment Methods',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Payment methods list
-              if (state is PaymentMethodsLoaded)
-                _buildPaymentMethodsList(context, state)
-              else if (state is ProfileLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: Text('Error loading payment methods'),
-                  ),
-                ),
-
-              // Add new payment method button
-              if (showAddButton)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AddCardScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Payment methods',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: BlocProvider(
+        create: (context) => di<ProfileBloc>()..add(LoadPaymentMethods()),
+        child: BlocConsumer<ProfileBloc, ProfileState>(
+          listener: (context, state) {
+            if (state is ProfileError) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+            }
+          },
+          builder: (context, state) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (state is PaymentMethodsLoaded)
+                    Expanded(
+                      child: PaymentMethodsList(
+                        cards: state.cards,
+                        defaultCardId: state.defaultCardId,
+                        onCardSelected: onCardSelected,
                       ),
-                      child: const Text(
-                        'Add new payment method',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                    )
+                  else if (state is ProfileLoading)
+                    const Expanded(
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else
+                    const Expanded(
+                      child: Center(
+                        child: Text('Error loading payment methods'),
+                      ),
+                    ),
+
+                  // Add new payment method button
+                  if (showAddButton)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 8),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddCardScreen(),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.grey[200],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Add new payment method',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
+}
 
-  Widget _buildPaymentMethodsList(
-    BuildContext context,
-    PaymentMethodsLoaded state,
-  ) {
-    if (state.cards.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20.0),
-        child: Center(
-          child: Text(
-            'No payment methods added yet',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
+class PaymentMethodsList extends StatelessWidget {
+  final List<CreditCard> cards;
+  final String? defaultCardId;
+  final Function(CreditCard)? onCardSelected;
+
+  const PaymentMethodsList({
+    Key? key,
+    required this.cards,
+    this.defaultCardId,
+    this.onCardSelected,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (cards.isEmpty) {
+      return const Center(
+        child: Text(
+          'No payment methods added yet',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
       );
     }
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: state.cards.length,
+      physics: const BouncingScrollPhysics(),
+      itemCount: cards.length,
       itemBuilder: (context, index) {
-        final card = state.cards[index];
-        final isDefault = card.id == state.defaultCardId;
-        return _buildCardItem(context, card, isDefault);
+        final card = cards[index];
+        return PaymentMethodItem(
+          card: card,
+          isDefault: card.id == defaultCardId,
+          onCardSelected: onCardSelected,
+        );
       },
     );
   }
+}
 
-  Widget _buildCardItem(BuildContext context, CreditCard card, bool isDefault) {
-    return Slidable(
-      endActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (_) {
-              _showDeleteConfirmation(context, card);
-            },
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            icon: Icons.delete,
-            label: 'Delete',
-          ),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: onCardSelected != null ? () => onCardSelected!(card) : null,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-            border:
-                isDefault
-                    ? Border.all(color: Colors.black, width: 2)
-                    : Border.all(color: Colors.grey.shade300),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Image.asset(
-              card.cardIconPath,
+class PaymentMethodItem extends StatelessWidget {
+  final CreditCard card;
+  final bool isDefault;
+  final Function(CreditCard)? onCardSelected;
+
+  const PaymentMethodItem({
+    Key? key,
+    required this.card,
+    this.isDefault = false,
+    this.onCardSelected,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Get last 4 digits of card number
+    final lastFourDigits =
+        card.cardNumber.length >= 4
+            ? card.cardNumber.substring(card.cardNumber.length - 4)
+            : card.cardNumber;
+
+    // Get card type name (Visa, Mastercard, etc)
+    final cardTypeName = _getCardTypeName(card.cardType ?? "");
+
+    return GestureDetector(
+      onTap: onCardSelected != null ? () => onCardSelected!(card) : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            // Card logo
+            Container(
               width: 40,
               height: 40,
-              errorBuilder:
-                  (context, error, stackTrace) =>
-                      const Icon(Icons.credit_card, size: 40),
+              decoration: BoxDecoration(
+                color: _getCardColor(card.cardType ?? "Visa"),
+                shape: BoxShape.circle,
+              ),
+              child: Center(child: _getCardLogo(card.cardType ?? "Visa")),
             ),
-            title: Text(
-              card.cardHolderName,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text('Expires: ${card.expiryDate}'),
-                Text(card.cardHolderName),
-                if (isDefault)
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Default',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+            const SizedBox(width: 16),
+            // Card details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$cardTypeName $lastFourDigits',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    card.expiryDate,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
             ),
-            trailing:
-                !isDefault
-                    ? IconButton(
-                      icon: const Icon(Icons.more_vert),
-                      onPressed: () => _showCardOptions(context, card),
-                    )
-                    : null,
-          ),
+            // Options menu
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: Colors.grey, size: 20),
+              onPressed: () => _showCardOptions(context, card),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _getCardLogo(String cardType) {
+    switch (cardType.toLowerCase()) {
+      case 'visa':
+        return const Text(
+          'V',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        );
+      case 'mastercard':
+        return const Text(
+          'M',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        );
+      case 'amex':
+        return const Text(
+          'A',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        );
+      default:
+        return const Icon(Icons.credit_card, color: Colors.white, size: 20);
+    }
+  }
+
+  Color _getCardColor(String cardType) {
+    switch (cardType.toLowerCase()) {
+      case 'visa':
+        return Colors.blue;
+      case 'mastercard':
+        return Colors.orange;
+      case 'amex':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getCardTypeName(String cardType) {
+    switch (cardType.toLowerCase()) {
+      case 'visa':
+        return 'Visa';
+      case 'mastercard':
+        return 'Mastercard';
+      case 'amex':
+        return 'American Express';
+      default:
+        return 'Card';
+    }
   }
 
   void _showCardOptions(BuildContext context, CreditCard card) {

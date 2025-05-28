@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ulmo/features/profile/domain/usecases/delete_payment_method_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/get_payment_methods_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/save_payment_method_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/set_default_payment_method_usecase.dart';
 import '../../domain/usecases/change_password_usecase.dart';
 import '../../domain/usecases/get_user_orders_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
@@ -19,11 +23,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetUserOrdersUseCase getUserOrders;
   final SignOutUseCase signOut;
 
-  // // Payment method use cases
-  // final GetPaymentMethodsUseCase getPaymentMethods;
-  // final SavePaymentMethodUseCase savePaymentMethod;
-  // final DeletePaymentMethodUseCase deletePaymentMethod;
-  // final SetDefaultPaymentMethodUseCase setDefaultPaymentMethod;
+  // Payment method use cases
+  final GetPaymentMethodsUseCase getPaymentMethods;
+  final SavePaymentMethodUseCase savePaymentMethod;
+  final DeletePaymentMethodUseCase deletePaymentMethod;
+  final SetDefaultPaymentMethodUseCase setDefaultPaymentMethod;
 
   ProfileBloc({
     required this.getUserProfile,
@@ -32,6 +36,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required this.changePassword,
     required this.getUserOrders,
     required this.signOut,
+    required this.getPaymentMethods,
+    required this.savePaymentMethod,
+    required this.deletePaymentMethod,
+    required this.setDefaultPaymentMethod,
   }) : super(ProfileInitial()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfile>(_onUpdateProfile);
@@ -42,10 +50,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<SignOut>(_onSignOut);
     on<LoadOrderDetails>(_onLoadOrderDetails);
     // Payment method events
-    // on<LoadPaymentMethods>(_onLoadPaymentMethods);
-    // on<AddPaymentMethod>(_onAddPaymentMethod);
-    // on<DeletePaymentMethod>(_onDeletePaymentMethod);
-    // on<SetDefaultPaymentMethod>(_onSetDefaultPaymentMethod);
+    on<LoadPaymentMethods>(_onLoadPaymentMethods);
+    on<AddPaymentMethod>(_onAddPaymentMethod);
+    on<DeletePaymentMethod>(_onDeletePaymentMethod);
+    on<SetDefaultPaymentMethod>(_onSetDefaultPaymentMethod);
   }
 
   Future<void> _onLoadProfile(
@@ -168,78 +176,78 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
-  // Future<void> _onLoadPaymentMethods(
-  //   LoadPaymentMethods event,
-  //   Emitter<ProfileState> emit,
-  // ) async {
-  //   try {
-  //     emit(ProfileLoading());
-  //     final cards = await getPaymentMethods();
+  Future<void> _onLoadPaymentMethods(
+    LoadPaymentMethods event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      emit(ProfileLoading());
+      final cards = await getPaymentMethods();
 
-  //     // Extract default card ID
-  //     final defaultCardId =
-  //         cards.isNotEmpty
-  //             ? cards
-  //                 .firstWhere(
-  //                   (card) => card.isDefault,
-  //                   orElse: () => cards.first,
-  //                 )
-  //                 .id
-  //             : null;
+      // Extract default card ID
+      final defaultCardId =
+          cards.isNotEmpty
+              ? cards
+                  .firstWhere(
+                    (card) => card.isDefault,
+                    orElse: () => cards.first,
+                  )
+                  .id
+              : null;
 
-  //     emit(PaymentMethodsLoaded(cards, defaultCardId));
-  //   } catch (e) {
-  //     emit(ProfileError('Failed to load payment methods: ${e.toString()}'));
-  //   }
-  // }
+      emit(PaymentMethodsLoaded(cards, defaultCardId));
+    } catch (e) {
+      emit(ProfileError('Failed to load payment methods: ${e.toString()}'));
+    }
+  }
 
-  // Future<void> _onAddPaymentMethod(
-  //   AddPaymentMethod event,
-  //   Emitter<ProfileState> emit,
-  // ) async {
-  //   try {
-  //     emit(ProfileLoading());
-  //     final savedCard = await savePaymentMethod(event.card);
-  //     emit(PaymentMethodAdded(savedCard));
+  Future<void> _onAddPaymentMethod(
+    AddPaymentMethod event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      emit(ProfileLoading());
+      final savedCard = await savePaymentMethod(event.card);
+      emit(PaymentMethodAdded(savedCard));
 
-  //     // Reload payment methods to show updated list
-  //     add(LoadPaymentMethods());
-  //   } catch (e) {
-  //     emit(ProfileError('Failed to add payment method: ${e.toString()}'));
-  //   }
-  // }
+      // Reload payment methods to show updated list
+      add(LoadPaymentMethods());
+    } catch (e) {
+      emit(ProfileError('Failed to add payment method: ${e.toString()}'));
+    }
+  }
 
-  // Future<void> _onDeletePaymentMethod(
-  //   DeletePaymentMethod event,
-  //   Emitter<ProfileState> emit,
-  // ) async {
-  //   try {
-  //     emit(ProfileLoading());
-  //     await deletePaymentMethod(event.cardId);
-  //     emit(PaymentMethodDeleted());
+  Future<void> _onDeletePaymentMethod(
+    DeletePaymentMethod event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      emit(ProfileLoading());
+      await deletePaymentMethod(event.cardId);
+      emit(PaymentMethodDeleted());
 
-  //     // Reload payment methods to show updated list
-  //     add(LoadPaymentMethods());
-  //   } catch (e) {
-  //     emit(ProfileError('Failed to delete payment method: ${e.toString()}'));
-  //   }
-  // }
+      // Reload payment methods to show updated list
+      add(LoadPaymentMethods());
+    } catch (e) {
+      emit(ProfileError('Failed to delete payment method: ${e.toString()}'));
+    }
+  }
 
-  // Future<void> _onSetDefaultPaymentMethod(
-  //   SetDefaultPaymentMethod event,
-  //   Emitter<ProfileState> emit,
-  // ) async {
-  //   try {
-  //     emit(ProfileLoading());
-  //     await setDefaultPaymentMethod(event.cardId);
-  //     emit(DefaultPaymentMethodSet());
+  Future<void> _onSetDefaultPaymentMethod(
+    SetDefaultPaymentMethod event,
+    Emitter<ProfileState> emit,
+  ) async {
+    try {
+      emit(ProfileLoading());
+      await setDefaultPaymentMethod(event.cardId);
+      emit(DefaultPaymentMethodSet(event.cardId));
 
-  //     // Reload payment methods to show updated list
-  //     add(LoadPaymentMethods());
-  //   } catch (e) {
-  //     emit(
-  //       ProfileError('Failed to set default payment method: ${e.toString()}'),
-  //     );
-  //   }
-  // }
+      // Reload payment methods to show updated list
+      add(LoadPaymentMethods());
+    } catch (e) {
+      emit(
+        ProfileError('Failed to set default payment method: ${e.toString()}'),
+      );
+    }
+  }
 }

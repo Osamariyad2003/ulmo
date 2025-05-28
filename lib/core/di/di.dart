@@ -33,8 +33,12 @@ import 'package:ulmo/features/product/presentation/controller/product_bloc.dart'
 import 'package:ulmo/features/profile/data/data_source/profile_data_source.dart';
 import 'package:ulmo/features/profile/data/repo/profile_repo.dart';
 import 'package:ulmo/features/profile/domain/usecases/change_password_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/delete_payment_method_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:ulmo/features/profile/domain/usecases/get_user_orders_usecase.dart';
 import 'package:ulmo/features/profile/domain/usecases/get_user_profile_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/save_payment_method_usecase.dart';
+import 'package:ulmo/features/profile/domain/usecases/set_default_payment_method_usecase.dart';
 import 'package:ulmo/features/profile/domain/usecases/sign_out_usecase.dart';
 import 'package:ulmo/features/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:ulmo/features/profile/domain/usecases/upload_profile_photo_usecase.dart';
@@ -129,7 +133,10 @@ Future<void> setupServiceLocator() async {
   );
 
   di.registerLazySingleton<ProfileRepo>(
-    () => ProfileRepo(profileDataSource: di<ProfileDataSource>()),
+    () => ProfileRepo(
+      profileDataSource: di<ProfileDataSource>(),
+      cardLocalSource: di<HiveCardStorage>(),
+    ),
   );
   di.registerLazySingleton<DeliveryRepository>(
     () => DeliveryRepository(addressDataSource: di.get<SaveAddressFirebase>()),
@@ -215,6 +222,18 @@ Future<void> setupServiceLocator() async {
   di.registerLazySingleton<UpdateProfileUseCase>(
     () => UpdateProfileUseCase(di.get<ProfileRepo>()),
   );
+  di.registerLazySingleton<DeletePaymentMethodUseCase>(
+    () => DeletePaymentMethodUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<GetPaymentMethodsUseCase>(
+    () => GetPaymentMethodsUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<SavePaymentMethodUseCase>(
+    () => SavePaymentMethodUseCase(di.get<ProfileRepo>()),
+  );
+  di.registerLazySingleton<SetDefaultPaymentMethodUseCase>(
+    () => SetDefaultPaymentMethodUseCase(di.get<ProfileRepo>()),
+  );
 
   //  blocs
   di.registerLazySingleton<RegisterBloc>(
@@ -280,6 +299,10 @@ Future<void> setupServiceLocator() async {
       changePassword: di<ChangePasswordUseCase>(),
       getUserOrders: di<GetUserOrdersUseCase>(),
       signOut: di<SignOutUseCase>(),
+      getPaymentMethods: di<GetPaymentMethodsUseCase>(),
+      savePaymentMethod: di<SavePaymentMethodUseCase>(),
+      deletePaymentMethod: di<DeletePaymentMethodUseCase>(),
+      setDefaultPaymentMethod: di<SetDefaultPaymentMethodUseCase>(),
     ),
   );
 }

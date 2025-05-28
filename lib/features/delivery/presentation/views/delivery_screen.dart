@@ -3,10 +3,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:ulmo/core/di/di.dart';
+import 'package:ulmo/core/helpers/api_keys.dart';
 import 'package:ulmo/core/utils/widgets/custom_button.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_bloc.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_event.dart';
 import 'package:ulmo/features/bag/presentation/controller/bag_state.dart';
+import 'package:ulmo/features/delivery/presentation/views/address_list_screen.dart'
+    show AddressListScreen;
 import '../../data/model/delivery_model.dart';
 
 import '../controller/delivery_bloc.dart';
@@ -70,7 +74,7 @@ class AddressAutocompletePageState extends State<AddressAutocompletePage> {
               focusNode: _focusNode, // Use the focus node to auto-focus
               debounceTime: 600,
               isLatLngRequired: true,
-              countries: const ['JO'],
+              countries: ['JO'],
               getPlaceDetailWithLatLng: (Prediction p) {
                 widget.onAddressSelected(
                   p.description ?? '',
@@ -121,9 +125,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create:
-          (context) =>
-              DeliveryBloc(D_repository: RepositoryProvider.of(context)),
+      create: (context) => di<DeliveryBloc>(), // Use your DI to get the bloc
       child: BlocConsumer<DeliveryBloc, DeliveryState>(
         listener: (context, state) {
           if (state is DeliveryError) {
@@ -133,10 +135,12 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
           }
         },
         builder: (context, state) {
-          final deliveryInfo = context.read<DeliveryBloc>().currentDelivery;
+          final deliveryBloc = context.read<DeliveryBloc>();
+          final deliveryInfo = deliveryBloc.currentDelivery;
+
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Delivery Information'),
+              title: Text('Delivery Information'),
               elevation: 0,
               backgroundColor: Colors.white,
             ),
@@ -297,19 +301,9 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
   }
 
   void _showAddressPicker(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder:
-            (ctx) => AddressAutocompletePage(
-              apiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
-              onAddressSelected: (description, lat, lng) {
-                context.read<DeliveryBloc>().add(
-                  SetDeliveryAddress(description, lat, lng),
-                );
-              },
-            ),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (ctx) => AddressListScreen()));
   }
 
   Widget _buildDatePicker(BuildContext context, DateTime? date) {

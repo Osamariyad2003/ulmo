@@ -27,15 +27,33 @@ class SaveAddressFirebase {
 
   Future<List<Map<String, dynamic>>> getAddresses(String userId) async {
     try {
-      final querySnapshot =
-          await _firestore
-              .collection('places')
-              .where('userId', isEqualTo: userId)
-              .orderBy('createdAt', descending: true)
-              .get();
+      // Modify the query to handle the case when the index doesn't exist
+      QuerySnapshot querySnapshot;
+      try {
+        // Try with orderBy - this requires the composite index
+        querySnapshot =
+            await _firestore
+                .collection('places')
+                .where('userId', isEqualTo: userId)
+                .orderBy('createdAt', descending: true)
+                .get();
+      } catch (indexError) {
+        // If index error occurs, fall back to simpler query without ordering
+        print('Index error: $indexError - Using simple query without ordering');
+        querySnapshot =
+            await _firestore
+                .collection('places')
+                .where('userId', isEqualTo: userId)
+                .get();
+      }
 
       return querySnapshot.docs
-          .map((doc) => {'id': doc.id, ...doc.data()})
+          .map(
+            (doc) => <String, dynamic>{
+              'id': doc.id,
+              ...?doc.data() as Map<String, dynamic>,
+            },
+          )
           .toList();
     } catch (e) {
       throw Exception('Failed to get addresses: $e');

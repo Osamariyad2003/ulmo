@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ulmo/features/delivery/presentation/widgets/address_form_screen.dart';
 import '../widgets/address_item.dart';
 import '../widgets/add_address_button.dart';
 import '../controller/delivery_bloc.dart';
@@ -19,8 +20,7 @@ class AddressListScreen extends StatelessWidget {
     return BlocProvider<DeliveryBloc>(
       create: (context) {
         final bloc = di<DeliveryBloc>();
-        // Get userId from CacheKeys instead of static value
-        final userId = CachesKeys.userId; // Use cached userId
+        final userId = CacheKeys.cachedUserId; // Use cached userId
         bloc.add(LoadSavedAddresses(userId));
         return bloc;
       },
@@ -193,14 +193,19 @@ void _selectAddress(BuildContext context, DeliveryInfo address) {
   Navigator.pop(context);
 }
 
+// Fix the BlocProvider.of error by capturing the bloc before navigation
 void _navigateToDeliveryScreen(BuildContext context) {
+  // Capture the bloc instance before creating the route
+  final deliveryBloc = context.read<DeliveryBloc>();
+
   Navigator.push(
     context,
     MaterialPageRoute(
       builder:
           (context) => BlocProvider.value(
-            value: BlocProvider.of<DeliveryBloc>(context),
-            child: const DeliveryScreen(),
+            // Use the captured bloc instead of trying to read from the new context
+            value: deliveryBloc,
+            child: AddressFormScreen(),
           ),
     ),
   );

@@ -93,9 +93,9 @@ class BagScreen extends StatelessWidget {
                           ),
                       decoration: InputDecoration(
                         hintText: "Promocode",
-                        prefixIcon: const Icon(Icons.local_offer_outlined),
-                        suffixIcon: const Icon(Icons.check_circle_outline),
-                        contentPadding: const EdgeInsets.symmetric(
+                        prefixIcon: Icon(Icons.local_offer_outlined),
+                        suffixIcon: Icon(Icons.check_circle_outline),
+                        contentPadding: EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 14,
                         ),
