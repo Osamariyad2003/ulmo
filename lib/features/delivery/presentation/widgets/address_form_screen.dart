@@ -147,12 +147,15 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 debounceTime: 300,
                 countries: const ['gb'],
                 textEditingController: _streetController,
-                getPlaceDetailWithLatLng: true,
-                itmClick: (prediction) async {
+                getPlaceDetailWithLatLng: (prediction) {
+                  _pickedLat = prediction.lat as double?;
+                  _pickedLng = prediction.lng as double?;
+                },
+                itemClick: (prediction) async {
                   _streetController.text = prediction.description!;
                   // No need to fetch details separately, the lat/lng are already in the prediction
-                  _pickedLat = prediction.lat;
-                  _pickedLng = prediction.lng;
+                  _pickedLat = (prediction?.lat ?? 77.78) as double?;
+                  _pickedLng = (prediction?.lng ?? 77.90) as double?;
                   setState(() {});
                   FocusScope.of(context).unfocus();
                 },
