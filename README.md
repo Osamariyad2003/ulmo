@@ -18,48 +18,60 @@ A complete Flutter implementation of the **Ulmo E-Commerce UI Kit**, powered by 
 
 ## 📱 Screenshots
 
-### 🏠 Home Screen – Product Grid
-Displays products in a two-column grid with image, name, and price.
+## 🗂 Category Feature  
+Displays a horizontal scrollable list of product categories for filtering.
 
-| Grid View | Product Tile |
-|-----------|--------------|
-| ![Grid View](assets/screenshots/grid_view.png) | ![Product Tile](assets/screenshots/product_tile.png) |
+| Categories |
+|------------|
+| ![Categories](screenshots/main_page.png) |
 
 ---
 
-### 🛍 Product Details
-Tapping a product leads to a detail view with large image, description, price, and add-to-cart.
+## 🛍 Product Feature  
 
-| Product Detail |
+### 🧱 Product Grid  
+Two-column grid displaying product image, name, and price.
+
+| Product Grid |
+|--------------|
+| ![Grid View](screenshots/product_grid.png) |
+
+### 🔍 Product Details  
+Tapping a product opens a detailed view with large image, description, price, and add-to-cart option.
+
+| Product  |
 |----------------|
-| ![Product Detail](assets/screenshots/product_detail.png) |
+| ![Product Detail](screenshots/product_details.png) |
 
 ---
 
-### 🛒 Shopping Cart
-View, edit, and delete items in your cart with a subtotal calculation.
+## 🛒 Bag Feature  
+View and manage items added to the cart with subtotal calculation.
 
-| Cart View |
-|-----------|
-| ![Cart](assets/screenshots/cart.png) |
-
----
-
-### 👤 Authentication
-Clean login and registration UI with Firebase integration.
-
-| Login | Register |
-|-------|----------|
-| ![Login](assets/screenshots/login.png) | ![Register](assets/screenshots/register.png) |
+| Bag (Cart View) |
+|-----------------|
+| ![Cart](screenshots/order.png) |
 
 ---
 
-### 🧾 Order History
-Displays previously placed orders, including status and total cost.
+## 👤 Profile Feature  
+Displays user info, order history, and settings.
 
-| Order History |
-|----------------|
-| ![Orders](assets/screenshots/order_history.png) |
+| Profile |
+|---------|
+| ![Profile](screenshots/address.png) |
+
+---
+
+## 🛠 Admin Panel  
+Admin-only interface to manage products, categories, and orders.
+
+| Admin Panel |
+|-------------|
+| ![Admin](screenshots/admin_panel_2.png) |
+
+---
+
 
 ---
 
