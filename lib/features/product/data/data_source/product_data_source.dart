@@ -23,6 +23,8 @@ class ProductDataSource {
 
         data['id'] = doc.id;
 
+        data['id'] = doc.id;
+
         if (data.containsKey('price')) {
           if (data['price'] is String) {
             data['price'] = double.tryParse(data['price']) ?? 0.0;

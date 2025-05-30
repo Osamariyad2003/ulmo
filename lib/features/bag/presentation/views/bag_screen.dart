@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
-import 'dart:math';
-import 'package:ulmo/core/app_router/routers.dart';
 
 import '../../../../core/utils/widgets/custom_button.dart';
 import '../controller/bag_bloc.dart';
@@ -22,21 +20,25 @@ class BagScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          "bag",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
         centerTitle: false,
-        automaticallyImplyLeading: false,
+        title: const Text("bag", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        foregroundColor: Colors.black,
       ),
       body: BlocBuilder<BagBloc, BagState>(
         builder: (context, state) {
           if (state is BagLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: ListView.separated(
+                itemCount: 3,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) => Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: const BagItemPlaceholder(),
+                ),
+              ),
+            );
           }
 
           if (state is! BagLoaded) {
@@ -44,121 +46,77 @@ class BagScreen extends StatelessWidget {
           }
 
           final bag = state.bag;
-          final promoCode = bag.promoCode ?? "";
+          final promoCode = bag.promoCode;
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: ListView.separated(
-                    itemCount: bag.items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final item = bag.items[index];
-                      return ProductTile(
-                        imageUrl: item.imageUrl,
-                        title: item.name,
-                        description: item.name,
-                        price: item.price,
-                        quantity: item.quantity,
-                        onAdd:
-                            () => context.read<BagBloc>().add(
-                              AddQuantityEvent(item.productId),
+                  child: ListView(
+                    children: [
+                      ...bag.items.map(
+                            (item) => ProductTile(
+                          imageUrl: item.imageUrl,
+                          title: item.name,
+                          description:item.name,
+                          price: item.price,
+                          quantity: item.quantity,
+                          onAdd: () => context.read<BagBloc>().add(AddQuantityEvent(item.productId)),
+                          onRemove: () => context.read<BagBloc>().add(RemoveQuantityEvent(item.productId)),
+                          onRemoveTile: () => context.read<BagBloc>().add(RemoveItemEvent(item.productId)),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (promoCode?.isNotEmpty??false)
+                        PromoCodeTile(
+                          promoCode: promoCode??"",
+                          onRemove: () => context.read<BagBloc>().add(ApplyPromoEvent("")),
+                        )
+                      else
+                        TextField(
+                          onSubmitted: (value) =>
+                              context.read<BagBloc>().add(ApplyPromoEvent(value)),
+                          decoration: InputDecoration(
+                            hintText: "Enter promocode",
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
                             ),
-                        onRemove:
-                            () => context.read<BagBloc>().add(
-                              RemoveQuantityEvent(item.productId),
-                            ),
-                        onRemoveTile:
-                            () => context.read<BagBloc>().add(
-                              RemoveItemEvent(item.productId),
-                            ),
-                      );
-                    },
+                            fillColor: Colors.grey[100],
+                            filled: true,
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("total", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(
+                            "\$${bag.total.toStringAsFixed(2)}",
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      if (bag.promoCode == '0')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            "Promocode -\$${bag.promoCode??""}",
+                            style: TextStyle(color: Colors.green[700], fontSize: 14),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                promoCode.isNotEmpty
-                    ? PromoCodeTile(
-                      promoCode: promoCode,
-                      onRemove:
-                          () =>
-                              context.read<BagBloc>().add(ApplyPromoEvent("")),
-                    )
-                    : TextField(
-                      onSubmitted:
-                          (value) => context.read<BagBloc>().add(
-                            ApplyPromoEvent(value),
-                          ),
-                      decoration: InputDecoration(
-                        hintText: "Promocode",
-                        prefixIcon: Icon(Icons.local_offer_outlined),
-                        suffixIcon: Icon(Icons.check_circle_outline),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                      ),
-                    ),
-                const SizedBox(height: 16),
-                // if (bag.items.isNotEmpty) ...[
-                //   const Text(
-                //     "Items in bag:",
-                //     style: TextStyle(fontWeight: FontWeight.bold),
-                //   ),
-                //   const SizedBox(height: 8),
-                //   Container(
-                //     padding: const EdgeInsets.all(8),
-                //     decoration: BoxDecoration(
-                //       color: Colors.grey[100],
-                //       borderRadius: BorderRadius.circular(8),
-                //     ),
-                //     child: Column(
-                //       crossAxisAlignment: CrossAxisAlignment.start,
-                //       children: [
-                //         for (var item in bag.items)
-                //             Text("ID: ${item.productId.substring(0, Math.min(8, item.productId.length))}... | ${item.name} | Qty: ${item.quantity}",                         ),
-                //       ],
-                //     ),
-                //   ),
-                //   const SizedBox(height: 16),
-                // ],
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "total",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          "\$${bag.total.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    CustomButton(
-                      label: "Continue",
-                      onPressed:
-                          () => Navigator.pushNamed(context, Routes.delivery),
-                    ),
-                  ],
+                CustomButton(
+                  label: "Continue",
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/delivery');
+                  },
                 ),
               ],
             ),
@@ -168,3 +126,4 @@ class BagScreen extends StatelessWidget {
     );
   }
 }
+

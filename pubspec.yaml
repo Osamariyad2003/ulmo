@@ -60,7 +60,6 @@ dependencies:
   hive_flutter: ^1.1.0
   flutter_secure_storage: ^9.2.4
 
-  google_fonts: ^6.2.1
   flutter_screenutil: ^5.9.3
 
   # If you want to include your own fonts manually, see flutter/fonts below
@@ -80,11 +79,10 @@ dependencies:
   timeago: ^3.3.0
   image_picker: ^1.0.4
   flutter_stripe: ^11.4.0
-  google_places_flutter: ^2.1.0
-  google_maps_flutter: ^2.12.1
   flutter_slidable: ^4.0.0
   uuid: ^4.5.1
-  flutter_google_places: ^0.3.0
+  google_places_flutter: ^2.0.9
+
 
 
 
@@ -143,3 +141,10 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  plugin:
+    platforms:
+      macos:
+        default_package: null
+      windows:
+        default_package: null

@@ -141,7 +141,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               child: GooglePlaceAutoCompleteTextField(
                 googleAPIKey: APIKeys.googleMapKey,
                 inputDecoration: const InputDecoration(
-                  hintText: 'Street',
+                  hintText: 'Address',
                   border: InputBorder.none,
                 ),
                 debounceTime: 300,
@@ -198,4 +198,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       ),
     );
   }
+}
+
+Map<String, String> getGoogleApiHeaders() {
+  return {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json',
+  };
 }
