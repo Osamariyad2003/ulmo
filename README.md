@@ -63,21 +63,9 @@ Displays user info, order history, and settings.
 
 ---
 
-## 🛠 Admin Panel  
-Admin-only interface to manage products, categories, and orders.
-
-| Admin Panel |
-|-------------|
-| ![Admin](screenshots/admin_panel_2.png) |
-
----
-
-
----
-
 ### ⚙️ Admin Panel (Web)
 Add or edit products via the Firebase-powered admin panel.
 
 | Dashboard | Add Product |
 |-----------|-------------|
-| ![Dashboard](assets/screenshots/admin_dashboard.png) | ![Add Product](assets/screenshots/admin_upload.png) |
+| ![Dashboard](screenshots/admin_panel.png) | ![Add Product](screenshots/admin_panel_2.png) |
